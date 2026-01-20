@@ -74,6 +74,17 @@ func NewRouter(cfg RouterConfig) *http.ServeMux {
 		mux.HandleFunc("/v1/activate", rl.RegisterMiddleware(authMW.RequireSignature(handlers.Activate)))
 		mux.HandleFunc("/v1/snapshot", rl.SnapshotMiddleware(authMW.RequireSignature(handlers.Snapshot)))
 		mux.HandleFunc("/api/v1/admin/stats", rl.AdminMiddleware(handlers.AdminStats))
+		mux.HandleFunc("/api/v1/admin/instances/", rl.AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/api/v1/admin/instances/" || r.URL.Path == "/api/v1/admin/instances" {
+				handlers.AdminInstances(w, r)
+				return
+			}
+			if r.Method == http.MethodDelete {
+				handlers.AdminDeleteInstance(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		}))
 		mux.HandleFunc("/api/v1/admin/instances", rl.AdminMiddleware(handlers.AdminInstances))
 		mux.HandleFunc("/api/v1/admin/metrics/", rl.AdminMiddleware(handlers.AdminMetrics))
 		mux.HandleFunc("/api/v1/admin/applications", rl.AdminMiddleware(handlers.AdminListApplications))
@@ -100,6 +111,17 @@ func NewRouter(cfg RouterConfig) *http.ServeMux {
 		mux.HandleFunc("/v1/activate", authMW.RequireSignature(handlers.Activate))
 		mux.HandleFunc("/v1/snapshot", authMW.RequireSignature(handlers.Snapshot))
 		mux.HandleFunc("/api/v1/admin/stats", handlers.AdminStats)
+		mux.HandleFunc("/api/v1/admin/instances/", func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/api/v1/admin/instances/" || r.URL.Path == "/api/v1/admin/instances" {
+				handlers.AdminInstances(w, r)
+				return
+			}
+			if r.Method == http.MethodDelete {
+				handlers.AdminDeleteInstance(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		})
 		mux.HandleFunc("/api/v1/admin/instances", handlers.AdminInstances)
 		mux.HandleFunc("/api/v1/admin/metrics/", handlers.AdminMetrics)
 		mux.HandleFunc("/api/v1/admin/applications", handlers.AdminListApplications)

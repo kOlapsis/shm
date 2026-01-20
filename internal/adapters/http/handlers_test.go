@@ -71,6 +71,14 @@ func (m *mockInstanceRepo) UpdateStatus(ctx context.Context, id domain.InstanceI
 	return nil
 }
 
+func (m *mockInstanceRepo) Delete(ctx context.Context, id domain.InstanceID) error {
+	if _, ok := m.instances[id.String()]; !ok {
+		return domain.ErrInstanceNotFound
+	}
+	delete(m.instances, id.String())
+	return nil
+}
+
 type mockSnapshotRepo struct {
 	snapshots []*domain.Snapshot
 	saveErr   error

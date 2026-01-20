@@ -145,3 +145,17 @@ func (s *InstanceService) Revoke(ctx context.Context, instanceID string) error {
 
 	return nil
 }
+
+// Delete permanently removes an instance and all its associated snapshots.
+func (s *InstanceService) Delete(ctx context.Context, instanceID string) error {
+	id, err := domain.NewInstanceID(instanceID)
+	if err != nil {
+		return fmt.Errorf("delete instance: %w", err)
+	}
+
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("delete instance: %w", err)
+	}
+
+	return nil
+}

@@ -90,7 +90,7 @@ client, _ := shm.New(shm.Config{
 
 ## How It Works
 
-1. **Identity Generation**: On first run, the SDK generates an Ed25519 keypair and a unique instance ID, stored in `{DataDir}/{app-name}_shm_identity.json`
+1. **Identity Generation**: On first run, the SDK generates an Ed25519 keypair and a unique instance ID, stored in `{DataDir}/shm_identity.json`
 
 2. **Registration**: The client registers with the server, sending its public key
 

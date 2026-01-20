@@ -28,6 +28,10 @@ type InstanceRepository interface {
 
 	// UpdateStatus updates the status and last_seen_at timestamp.
 	UpdateStatus(ctx context.Context, id domain.InstanceID, status domain.InstanceStatus) error
+
+	// Delete removes an instance and all its associated snapshots.
+	// Returns domain.ErrInstanceNotFound if the instance doesn't exist.
+	Delete(ctx context.Context, id domain.InstanceID) error
 }
 
 // SnapshotRepository defines persistence operations for snapshots.

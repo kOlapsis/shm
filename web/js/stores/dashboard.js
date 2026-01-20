@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { fetchStats, fetchApplications, fetchInstances } from '../utils/api.js';
+import { fetchStats, fetchApplications, fetchInstances, deleteInstance } from '../utils/api.js';
 
 export default {
     loading: false,
     loadingMore: false,
     searchingInstances: false,
+    deletingInstance: false,
 
     stats: { total_instances: 0, active_instances: 0, per_app_counts: {} },
     applications: [],
@@ -48,6 +49,43 @@ export default {
     closeDrawer() {
         this.selectedInstance = null;
         this.currentResourceKeys = [];
+    },
+
+    async deleteSelectedInstance() {
+        if (!this.selectedInstance || this.deletingInstance) return false;
+
+        this.deletingInstance = true;
+        try {
+            await deleteInstance(this.selectedInstance.instance_id);
+
+            // Remove from raw instances
+            this.rawInstances = this.rawInstances.filter(
+                i => i.instance_id !== this.selectedInstance.instance_id
+            );
+
+            // Update stats
+            if (this.stats.total_instances > 0) {
+                this.stats.total_instances--;
+            }
+            if (this.selectedInstance.status === 'active' && this.stats.active_instances > 0) {
+                this.stats.active_instances--;
+            }
+
+            // Update per app counts
+            const appName = this.selectedInstance.app_name;
+            if (this.stats.per_app_counts?.[appName] > 0) {
+                this.stats.per_app_counts[appName]--;
+            }
+
+            this.processData();
+            this.closeDrawer();
+            return true;
+        } catch (e) {
+            console.error('Failed to delete instance:', e);
+            return false;
+        } finally {
+            this.deletingInstance = false;
+        }
     },
 
     openEditModal(appSlug) {

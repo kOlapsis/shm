@@ -432,3 +432,31 @@ func (h *Handlers) AdminRefreshStars(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "Stars refreshed"})
 }
+
+// AdminDeleteInstance handles instance deletion requests.
+func (h *Handlers) AdminDeleteInstance(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract instance_id from path /api/v1/admin/instances/{instance_id}
+	instanceID := r.URL.Path[len("/api/v1/admin/instances/"):]
+	if instanceID == "" {
+		http.Error(w, "Instance ID required", http.StatusBadRequest)
+		return
+	}
+
+	h.logger.Info("deleting instance", "instance_id", instanceID)
+
+	err := h.instances.Delete(r.Context(), instanceID)
+	if err != nil {
+		h.logger.Error("failed to delete instance", "instance_id", instanceID, "error", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	h.logger.Info("instance deleted", "instance_id", instanceID)
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "Instance deleted"})
+}

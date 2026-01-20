@@ -58,3 +58,14 @@ export async function refreshApplicationStars(slug) {
     }
     return response.json();
 }
+
+export async function deleteInstance(instanceId) {
+    const response = await fetch(`${API_BASE}/instances/${encodeURIComponent(instanceId)}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to delete instance');
+    }
+    return response.json();
+}

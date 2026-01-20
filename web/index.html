@@ -415,10 +415,50 @@
                             </div>
                             <p class="text-sm text-gray-400" x-text="`${instance.app_name} v${instance.app_version}`"></p>
                         </div>
-                        <button @click="close()" class="text-gray-500 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded-lg transition" aria-label="Close drawer">
-                            <i class="ph-bold ph-x text-lg" aria-hidden="true"></i>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button @click="showDeleteConfirm()" class="text-gray-500 hover:text-red-400 bg-gray-800 hover:bg-gray-700 p-2 rounded-lg transition" aria-label="Delete instance" title="Delete instance">
+                                <i class="ph-bold ph-trash text-lg" aria-hidden="true"></i>
+                            </button>
+                            <button @click="close()" class="text-gray-500 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded-lg transition" aria-label="Close drawer">
+                                <i class="ph-bold ph-x text-lg" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- Delete Confirmation -->
+                    <template x-if="confirmDelete">
+                        <div class="px-6 py-4 bg-red-500/5 border-b border-red-500/20">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                                    <i class="ph-bold ph-warning text-red-500 text-xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-bold text-red-400 mb-1">Delete this instance?</h4>
+                                    <p class="text-xs text-gray-400 mb-3">This will permanently delete this instance and all its snapshots. This action cannot be undone.</p>
+                                    <template x-if="deleteError">
+                                        <p class="text-xs text-red-400 mb-3" x-text="deleteError"></p>
+                                    </template>
+                                    <div class="flex items-center gap-2">
+                                        <button
+                                            @click="deleteInstance()"
+                                            :disabled="isDeleting"
+                                            class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                                        >
+                                            <i x-show="isDeleting" class="ph-bold ph-spinner animate-spin"></i>
+                                            <span x-text="isDeleting ? 'Deleting...' : 'Delete'"></span>
+                                        </button>
+                                        <button
+                                            @click="cancelDelete()"
+                                            :disabled="isDeleting"
+                                            class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
 
                     <!-- Drawer Content -->
                     <div class="p-6 overflow-y-auto flex-1 space-y-8">

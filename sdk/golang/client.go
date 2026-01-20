@@ -23,8 +23,8 @@ type Config struct {
 	ServerURL            string
 	AppName              string
 	AppVersion           string
-	DataDir              string        // where is store app_shm_identity.json
-	Environment          string        // prod, staging, ...
+	DataDir              string // where is store shm_identity.json
+	Environment          string // prod, staging, ...
 	Enabled              bool
 	ReportInterval       time.Duration // snapshots interval (default: 1h)
 	CollectSystemMetrics bool          // collect OS/runtime metrics (env: SHM_COLLECT_SYSTEM_METRICS)
@@ -56,7 +56,7 @@ func New(cfg Config) (*Client, error) {
 	}
 
 	ensureDataDir(cfg.DataDir)
-	idPath := cfg.DataDir + "/" + slug(cfg.AppName) + "_shm_identity.json"
+	idPath := cfg.DataDir + "/shm_identity.json"
 	id, err := loadOrGenerateIdentity(idPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init identity: %w", err)

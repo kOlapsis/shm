@@ -72,6 +72,14 @@ func (m *mockInstanceRepo) UpdateStatus(ctx context.Context, id domain.InstanceI
 	return nil
 }
 
+func (m *mockInstanceRepo) Delete(ctx context.Context, id domain.InstanceID) error {
+	if _, ok := m.instances[id.String()]; !ok {
+		return domain.ErrInstanceNotFound
+	}
+	delete(m.instances, id.String())
+	return nil
+}
+
 const (
 	validUUID = "550e8400-e29b-41d4-a716-446655440000"
 	validKey  = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"

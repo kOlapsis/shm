@@ -80,7 +80,7 @@ export class SHMClient {
     };
 
     // Load or generate identity
-    const idPath = join(dataDir, `${slug(config.appName)}_shm_identity.json`);
+    const idPath = join(dataDir, `shm_identity.json`);
     this.identity = loadOrGenerateIdentity(idPath);
     this.startTime = new Date();
   }

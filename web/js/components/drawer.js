@@ -13,6 +13,20 @@ export default () => ({
     formatResourceKey,
     getResourceIcon,
 
+    // Local state
+    confirmDelete: false,
+    deleteError: null,
+
+    /**
+     * Initialize component and watch for instance changes
+     */
+    init() {
+        this.$watch('$store.dashboard.selectedInstance', () => {
+            this.confirmDelete = false;
+            this.deleteError = null;
+        });
+    },
+
     /**
      * Get the dashboard store
      */
@@ -42,9 +56,45 @@ export default () => ({
     },
 
     /**
+     * Check if deleting
+     */
+    get isDeleting() {
+        return this.store.deletingInstance;
+    },
+
+    /**
      * Close the drawer
      */
     close() {
+        this.confirmDelete = false;
+        this.deleteError = null;
         this.store.closeDrawer();
+    },
+
+    /**
+     * Show delete confirmation
+     */
+    showDeleteConfirm() {
+        this.confirmDelete = true;
+        this.deleteError = null;
+    },
+
+    /**
+     * Cancel delete
+     */
+    cancelDelete() {
+        this.confirmDelete = false;
+        this.deleteError = null;
+    },
+
+    /**
+     * Delete the instance
+     */
+    async deleteInstance() {
+        this.deleteError = null;
+        const success = await this.store.deleteSelectedInstance();
+        if (!success) {
+            this.deleteError = 'Failed to delete instance. Please try again.';
+        }
     }
 });

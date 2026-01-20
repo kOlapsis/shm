@@ -142,3 +142,20 @@ func (r *InstanceRepository) UpdateStatus(ctx context.Context, id domain.Instanc
 
 	return nil
 }
+
+// Delete removes an instance and all its associated snapshots.
+func (r *InstanceRepository) Delete(ctx context.Context, id domain.InstanceID) error {
+	// Snapshots are deleted via ON DELETE CASCADE constraint
+	query := `DELETE FROM instances WHERE instance_id = $1`
+	result, err := r.db.ExecContext(ctx, query, id.String())
+	if err != nil {
+		return fmt.Errorf("delete instance %s: %w", id, err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrInstanceNotFound
+	}
+
+	return nil
+}
