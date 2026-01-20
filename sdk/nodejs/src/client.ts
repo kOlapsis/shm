@@ -12,7 +12,7 @@ import type {
   SnapshotRequest,
   SystemMetrics,
 } from './types.js';
-import { loadOrGenerateIdentity, slug } from './identity.js';
+import { loadOrGenerateIdentity } from './identity.js';
 import { signMessage } from './crypto.js';
 
 const DEFAULT_REPORT_INTERVAL_MS = 3600000; // 1 hour
@@ -79,9 +79,13 @@ export class SHMClient {
       collectSystemMetrics: config.collectSystemMetrics ?? collectSystemMetricsFromEnv(),
     };
 
-    // Load or generate identity
-    const idPath = join(dataDir, `shm_identity.json`);
-    this.identity = loadOrGenerateIdentity(idPath);
+    if (this.config.enabled) {
+      // Load or generate identity
+      const idPath = join(dataDir, `shm_identity.json`);
+      this.identity = loadOrGenerateIdentity(idPath);
+    } else {
+      this.identity = { instanceId: '', privateKey: '', publicKey: '' };
+    }
     this.startTime = new Date();
   }
 

@@ -55,6 +55,10 @@ func New(cfg Config) (*Client, error) {
 		cfg.Enabled = false
 	}
 
+	if !cfg.Enabled {
+		return &Client{config: cfg}, nil
+	}
+
 	ensureDataDir(cfg.DataDir)
 	idPath := cfg.DataDir + "/shm_identity.json"
 	id, err := loadOrGenerateIdentity(idPath)
