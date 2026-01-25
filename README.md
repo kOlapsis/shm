@@ -276,11 +276,11 @@ func main() {
     // 2. Define your metrics (Callback)
     // This runs every hour (configurable)
     telemetry.SetProvider(func() map[string]interface{} {
-        // Fetch your DB stats here
+        // Replace with your actual metrics
         return map[string]interface{}{
-            "documents_created": db.CountDocs(),     // Business Metric
-            "users_active":      db.CountActive(),   // Business Metric
-            "jobs_processed":    worker.TotalJobs(), // Business Metric
+            "documents_created": 42,  // e.g. db.CountDocs()
+            "users_active":      10,  // e.g. db.CountActive()
+            "jobs_processed":    100, // e.g. worker.TotalJobs()
         }
     })
 
@@ -321,9 +321,10 @@ const telemetry = new SHMClient({
 // 2. Define your metrics (Callback)
 // This runs every hour (configurable)
 telemetry.setProvider(() => ({
-    documents_created: db.countDocs(),     // Business Metric
-    users_active: db.countActive(),        // Business Metric
-    jobs_processed: worker.totalJobs(),    // Business Metric
+    // Replace with your actual metrics
+    documents_created: 42,        // e.g. db.countDocs()
+    users_active: 10,             // e.g. db.countActive()
+    jobs_processed: 100,          // e.g. worker.totalJobs()
 }));
 
 // 3. Start in background

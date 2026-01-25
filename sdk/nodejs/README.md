@@ -109,15 +109,15 @@ Add your own metrics with `setProvider`:
 ```typescript
 // Synchronous provider
 client.setProvider(() => ({
-  db_connections: pool.totalCount,
-  cache_hit_rate: cache.getHitRate(),
-  requests_total: requestCounter,
+  db_connections: 5,        // e.g. pool.totalCount
+  cache_hit_rate: 0.95,     // e.g. cache.getHitRate()
+  requests_total: 1000,     // e.g. requestCounter
 }));
 
 // Async provider supported
 client.setProvider(async () => ({
-  db_connections: await pool.getStats(),
-  external_api_status: await checkExternalApi(),
+  db_connections: 5,        // e.g. await pool.getStats()
+  external_api_status: 1,   // e.g. await checkExternalApi()
 }));
 ```
 

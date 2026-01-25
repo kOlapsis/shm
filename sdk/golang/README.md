@@ -37,8 +37,8 @@ func main() {
     // Optional: add custom metrics
     client.SetProvider(func() map[string]interface{} {
         return map[string]interface{}{
-            "users_count":    getUserCount(),
-            "jobs_processed": getJobsCount(),
+            "users_count":    42,  // e.g. getUserCount()
+            "jobs_processed": 100, // e.g. getJobsCount()
         }
     })
 
@@ -120,9 +120,9 @@ Add your own metrics with `SetProvider`:
 ```go
 client.SetProvider(func() map[string]interface{} {
     return map[string]interface{}{
-        "db_connections":  pool.Stats().OpenConnections,
-        "cache_hit_rate":  cache.HitRate(),
-        "requests_total":  atomic.LoadInt64(&requestCount),
+        "db_connections":  5,     // e.g. pool.Stats().OpenConnections
+        "cache_hit_rate":  0.95,  // e.g. cache.HitRate()
+        "requests_total":  1000,  // e.g. atomic.LoadInt64(&requestCount)
     }
 })
 ```
