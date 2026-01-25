@@ -350,10 +350,35 @@ graph LR
     D[Admin Dashboard] -- Read API --> B
 ```
 
-1.  **Client:** Generates Ed25519 keys on first run. Stores identity in `metrics_identity.json`.
+1.  **Client:** Generates Ed25519 keys on first run. Stores identity in `shm_identity.json`.
 2.  **Protocol:** Sends a Heartbeat/Snapshot signed with the private key.
 3.  **Storage:** PostgreSQL stores the raw JSON payload in a `jsonb` column.
 4.  **UI:** The server parses the JSON keys dynamically to build the table and graphs.
+
+### Identity File
+
+The SDK automatically generates `shm_identity.json` on first run. This file contains:
+
+```json
+{
+  "instance_id": "550e8400-e29b-41d4-a716-446655440000",
+  "private_key": "hex-encoded-ed25519-private-key",
+  "public_key": "hex-encoded-ed25519-public-key"
+}
+```
+
+**Important for Docker/Kubernetes:** The identity file must be persisted across container restarts. Mount a volume for the `DataDir` (Go) or `dataDir` (Node.js) configuration:
+
+```yaml
+services:
+  my-app:
+    volumes:
+      - ./data:/app/data  # Persist identity file
+    environment:
+      - SHM_DATA_DIR=/app/data
+```
+
+If the identity file is lost, the instance will generate a new identity and the server will return **401 Unauthorized** for requests signed with the old key.
 
 ---
 

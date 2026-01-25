@@ -98,6 +98,8 @@ client, _ := shm.New(shm.Config{
 
 4. **Periodic Snapshots**: System metrics + custom metrics are sent at the configured interval
 
+> **Docker/Kubernetes:** The identity file must persist across restarts. Mount a volume for `DataDir`, otherwise a new identity will be generated and the server will reject requests with **401 Unauthorized**.
+
 ## System Metrics
 
 The SDK automatically collects:
