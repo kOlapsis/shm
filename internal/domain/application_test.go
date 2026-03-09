@@ -245,7 +245,7 @@ func TestGitHubURL_OwnerAndRepo(t *testing.T) {
 		{
 			name:      "valid URL",
 			url:       "https://github.com/kolapsis/shm",
-			wantOwner: "btouchard",
+			wantOwner: "kolapsis",
 			wantRepo:  "shm",
 			wantErr:   nil,
 		},
