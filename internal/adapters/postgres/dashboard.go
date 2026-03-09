@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/btouchard/shm/internal/app/ports"
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/app/ports"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // DashboardReader implements ports.DashboardReader for PostgreSQL.

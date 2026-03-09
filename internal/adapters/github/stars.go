@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // StarsService implements ports.GitHubService for fetching GitHub repository stars.

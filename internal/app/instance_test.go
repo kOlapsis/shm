@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // mockInstanceRepo is a test double for ports.InstanceRepository.

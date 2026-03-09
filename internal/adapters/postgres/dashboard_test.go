@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 func TestDashboardReader_GetStats(t *testing.T) {

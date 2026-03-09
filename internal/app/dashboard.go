@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/btouchard/shm/internal/app/ports"
+	"github.com/kolapsis/shm/internal/app/ports"
 )
 
 // DashboardService handles dashboard-related use cases.

@@ -55,7 +55,7 @@ SHM is young and evolving.
 If you are using it (even in dev), your feedback is extremely valuable.
 
 👉 Share your experience here:
-https://github.com/btouchard/shm/discussions
+https://github.com/kolapsis/shm/discussions
 
 What matters most:
 - real use cases
@@ -172,7 +172,7 @@ services:
       retries: 5
 
   app:
-    image: ghcr.io/btouchard/shm:latest
+    image: ghcr.io/kolapsis/shm:latest
     # Or build from source:
     # build:
     #   context: .
@@ -196,8 +196,8 @@ volumes:
 
 ```bash
 mkdir -p migrations
-curl -sL https://raw.githubusercontent.com/btouchard/shm/main/migrations/001_init.sql -o migrations/001_init.sql
-curl -sL https://raw.githubusercontent.com/btouchard/shm/main/migrations/002_applications.sql -o migrations/002_applications.sql
+curl -sL https://raw.githubusercontent.com/kolapsis/shm/main/migrations/001_init.sql -o migrations/001_init.sql
+curl -sL https://raw.githubusercontent.com/kolapsis/shm/main/migrations/002_applications.sql -o migrations/002_applications.sql
 ```
 
 ### 3. Start the services
@@ -247,7 +247,7 @@ See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for deployment examples and secur
 Embed the telemetry client into your application.
 
 ```bash
-go get github.com/btouchard/shm/sdk
+go get github.com/kolapsis/shm/sdk
 ```
 
 ### Implementation Example
@@ -256,7 +256,7 @@ go get github.com/btouchard/shm/sdk
 package main
 
 import (
-	shm "github.com/btouchard/shm/sdk/golang"
+	shm "github.com/kolapsis/shm/sdk/golang"
 )
 
 func main() {
@@ -298,16 +298,16 @@ func main() {
 
 Embed the telemetry client into your Node.js application.
 
-[![npm version](https://img.shields.io/npm/v/@btouchard/shm-sdk?style=flat-square)](https://www.npmjs.com/package/@btouchard/shm-sdk)
+[![npm version](https://img.shields.io/npm/v/@kolapsis/shm-sdk?style=flat-square)](https://www.npmjs.com/package/@kolapsis/shm-sdk)
 
 ```bash
-npm install @btouchard/shm-sdk
+npm install @kolapsis/shm-sdk
 ```
 
 ### Implementation Example
 
 ```typescript
-import { SHMClient } from '@btouchard/shm-sdk';
+import { SHMClient } from '@kolapsis/shm-sdk';
 
 // 1. Configure the client
 const telemetry = new SHMClient({

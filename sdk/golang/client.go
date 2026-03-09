@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/btouchard/shm/pkg/crypto"
+	"github.com/kolapsis/shm/pkg/crypto"
 )
 
 type Config struct {

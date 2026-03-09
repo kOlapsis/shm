@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"os"
 
-	httpAdapter "github.com/btouchard/shm/internal/adapters/http"
-	"github.com/btouchard/shm/internal/adapters/postgres"
-	"github.com/btouchard/shm/internal/config"
-	"github.com/btouchard/shm/internal/middleware"
-	"github.com/btouchard/shm/web"
+	httpAdapter "github.com/kolapsis/shm/internal/adapters/http"
+	"github.com/kolapsis/shm/internal/adapters/postgres"
+	"github.com/kolapsis/shm/internal/config"
+	"github.com/kolapsis/shm/internal/middleware"
+	"github.com/kolapsis/shm/web"
 )
 
 func main() {

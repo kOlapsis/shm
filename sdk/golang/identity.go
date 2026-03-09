@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/btouchard/shm/pkg/crypto"
 	"github.com/google/uuid"
+	"github.com/kolapsis/shm/pkg/crypto"
 )
 
 type Identity struct {

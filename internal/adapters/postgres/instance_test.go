@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 const (

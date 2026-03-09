@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // SnapshotRepository implements ports.SnapshotRepository for PostgreSQL.

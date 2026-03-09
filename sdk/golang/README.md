@@ -5,7 +5,7 @@ Privacy-first telemetry client for self-hosted software.
 ## Installation
 
 ```bash
-go get github.com/btouchard/shm/sdk/golang
+go get github.com/kolapsis/shm/sdk/golang
 ```
 
 ## Quick Start
@@ -19,7 +19,7 @@ import (
     "os/signal"
     "syscall"
 
-    shm "github.com/btouchard/shm/sdk/golang"
+    shm "github.com/kolapsis/shm/sdk/golang"
 )
 
 func main() {

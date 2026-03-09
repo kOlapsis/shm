@@ -9,8 +9,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/btouchard/shm/internal/app"
-	"github.com/btouchard/shm/pkg/crypto"
+	"github.com/kolapsis/shm/internal/app"
+	"github.com/kolapsis/shm/pkg/crypto"
 )
 
 // KeyProvider is an interface for retrieving public keys for signature verification.

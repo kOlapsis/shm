@@ -2,7 +2,7 @@ name: shm
 
 services:
   app:
-    image: ghcr.io/btouchard/shm:latest
+    image: ghcr.io/kolapsis/shm:latest
     container_name: shm-app
     depends_on:
       db:

@@ -14,7 +14,7 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/btouchard/shm/internal/config"
+	"github.com/kolapsis/shm/internal/config"
 )
 
 type limiterEntry struct {

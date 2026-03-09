@@ -8,19 +8,19 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/btouchard/shm/internal/adapters/github"
-	"github.com/btouchard/shm/internal/adapters/postgres"
-	"github.com/btouchard/shm/internal/app"
-	"github.com/btouchard/shm/internal/middleware"
-	"github.com/btouchard/shm/internal/services"
+	"github.com/kolapsis/shm/internal/adapters/github"
+	"github.com/kolapsis/shm/internal/adapters/postgres"
+	"github.com/kolapsis/shm/internal/app"
+	"github.com/kolapsis/shm/internal/middleware"
+	"github.com/kolapsis/shm/internal/services"
 )
 
 // RouterConfig holds the configuration for creating a new router.
 type RouterConfig struct {
-	Store        *postgres.Store
-	RateLimiter  *middleware.RateLimiter
-	GitHubToken  string // Optional GitHub API token for higher rate limits
-	Logger       *slog.Logger
+	Store       *postgres.Store
+	RateLimiter *middleware.RateLimiter
+	GitHubToken string // Optional GitHub API token for higher rate limits
+	Logger      *slog.Logger
 }
 
 // NewRouter creates a fully wired HTTP router with all handlers and middleware.
@@ -94,7 +94,7 @@ func NewRouter(cfg RouterConfig) *http.ServeMux {
 				return
 			}
 			if len(r.URL.Path) > len("/api/v1/admin/applications/") &&
-			   r.URL.Path[len(r.URL.Path)-len("/refresh-stars"):] == "/refresh-stars" {
+				r.URL.Path[len(r.URL.Path)-len("/refresh-stars"):] == "/refresh-stars" {
 				handlers.AdminRefreshStars(w, r)
 				return
 			}
@@ -131,7 +131,7 @@ func NewRouter(cfg RouterConfig) *http.ServeMux {
 				return
 			}
 			if len(r.URL.Path) > len("/api/v1/admin/applications/") &&
-			   r.URL.Path[len(r.URL.Path)-len("/refresh-stars"):] == "/refresh-stars" {
+				r.URL.Path[len(r.URL.Path)-len("/refresh-stars"):] == "/refresh-stars" {
 				handlers.AdminRefreshStars(w, r)
 				return
 			}

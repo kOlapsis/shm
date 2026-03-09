@@ -768,11 +768,11 @@ Official SDKs are available for easy integration. They handle keypair generation
 ### Go SDK
 
 ```bash
-go get github.com/btouchard/shm/sdk
+go get github.com/kolapsis/shm/sdk
 ```
 
 ```go
-import "github.com/btouchard/shm/sdk"
+import "github.com/kolapsis/shm/sdk"
 
 telemetry, _ := sdk.New(sdk.Config{
     ServerURL:   "https://shm.example.com",
@@ -794,14 +794,14 @@ go telemetry.Start(context.Background())
 
 ### Node.js / TypeScript SDK
 
-[![npm version](https://img.shields.io/npm/v/@btouchard/shm-sdk?style=flat-square)](https://www.npmjs.com/package/@btouchard/shm-sdk)
+[![npm version](https://img.shields.io/npm/v/@kolapsis/shm-sdk?style=flat-square)](https://www.npmjs.com/package/@kolapsis/shm-sdk)
 
 ```bash
-npm install @btouchard/shm-sdk
+npm install @kolapsis/shm-sdk
 ```
 
 ```typescript
-import { SHMClient } from '@btouchard/shm-sdk';
+import { SHMClient } from '@kolapsis/shm-sdk';
 
 const telemetry = new SHMClient({
     serverUrl: 'https://shm.example.com',

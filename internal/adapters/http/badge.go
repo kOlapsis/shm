@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/btouchard/shm/internal/services/badge"
+	"github.com/kolapsis/shm/internal/services/badge"
 )
 
 func (h *Handlers) BadgeInstances(w http.ResponseWriter, r *http.Request) {

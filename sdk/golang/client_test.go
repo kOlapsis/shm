@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/btouchard/shm/pkg/crypto"
+	"github.com/kolapsis/shm/pkg/crypto"
 )
 
 // =============================================================================
@@ -706,7 +706,7 @@ func TestCollectSystemMetricsFromEnv(t *testing.T) {
 		envValue string
 		expected bool
 	}{
-		{"", true},      // absent = enabled
+		{"", true}, // absent = enabled
 		{"true", true},
 		{"TRUE", true},
 		{"1", true},
@@ -738,12 +738,12 @@ func TestDoNotTrack(t *testing.T) {
 		envValue string
 		expected bool
 	}{
-		{"", false},        // absent = tracking allowed
-		{"true", true},     // disabled
-		{"TRUE", true},     // disabled
-		{"1", true},        // disabled
-		{"false", false},   // tracking allowed
-		{"0", false},       // tracking allowed
+		{"", false},         // absent = tracking allowed
+		{"true", true},      // disabled
+		{"TRUE", true},      // disabled
+		{"1", true},         // disabled
+		{"false", false},    // tracking allowed
+		{"0", false},        // tracking allowed
 		{"anything", false}, // unknown = tracking allowed
 	}
 

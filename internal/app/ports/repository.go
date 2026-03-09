@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // InstanceRepository defines persistence operations for instances.

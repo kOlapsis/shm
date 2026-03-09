@@ -7,13 +7,13 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // mockApplicationRepository is a mock implementation of ports.ApplicationRepository
 type mockApplicationRepository struct {
-	apps         map[string]*domain.Application
-	saveErr      error
+	apps          map[string]*domain.Application
+	saveErr       error
 	findBySlugErr error
 }
 

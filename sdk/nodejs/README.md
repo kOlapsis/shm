@@ -10,13 +10,13 @@ Privacy-first telemetry client for self-hosted software.
 ## Installation
 
 ```bash
-npm install @btouchard/shm-sdk
+npm install @kolapsis/shm-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { SHMClient } from '@btouchard/shm-sdk';
+import { SHMClient } from '@kolapsis/shm-sdk';
 
 const client = new SHMClient({
   serverUrl: 'https://telemetry.example.com',
@@ -64,7 +64,7 @@ interface Config {
 ### Example with environment variables
 
 ```typescript
-import { SHMClient, collectSystemMetricsFromEnv } from '@btouchard/shm-sdk';
+import { SHMClient, collectSystemMetricsFromEnv } from '@kolapsis/shm-sdk';
 
 const client = new SHMClient({
   serverUrl: 'https://telemetry.example.com',
@@ -153,7 +153,7 @@ The SDK automatically detects the deployment environment:
 The SDK exports crypto utilities for advanced use cases:
 
 ```typescript
-import { generateKeypair, signMessage, verifySignature } from '@btouchard/shm-sdk';
+import { generateKeypair, signMessage, verifySignature } from '@kolapsis/shm-sdk';
 
 // Generate new Ed25519 keypair
 const { publicKey, privateKey } = generateKeypair();
@@ -183,7 +183,7 @@ import type {
   MetricsProvider,
   Identity,
   SystemMetrics,
-} from '@btouchard/shm-sdk';
+} from '@kolapsis/shm-sdk';
 ```
 
 ## Development

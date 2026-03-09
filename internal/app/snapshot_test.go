@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // mockSnapshotRepo is a test double for ports.SnapshotRepository.

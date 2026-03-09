@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/btouchard/shm/internal/app"
+	"github.com/kolapsis/shm/internal/app"
 )
 
 // Scheduler handles background periodic tasks.

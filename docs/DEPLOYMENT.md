@@ -40,7 +40,7 @@ services:
       retries: 5
 
   app:
-    image: ghcr.io/btouchard/shm:latest
+    image: ghcr.io/kolapsis/shm:latest
     # Or build from source:
     # build:
     #   context: .
@@ -64,8 +64,8 @@ volumes:
 
 ```bash
 mkdir -p migrations
-curl -sL https://raw.githubusercontent.com/btouchard/shm/main/migrations/001_init.sql -o migrations/001_init.sql
-curl -sL https://raw.githubusercontent.com/btouchard/shm/main/migrations/002_applications.sql -o migrations/002_applications.sql
+curl -sL https://raw.githubusercontent.com/kolapsis/shm/main/migrations/001_init.sql -o migrations/001_init.sql
+curl -sL https://raw.githubusercontent.com/kolapsis/shm/main/migrations/002_applications.sql -o migrations/002_applications.sql
 ```
 
 ### 3. Start the services
@@ -174,7 +174,7 @@ services:
       retries: 5
 
   app:
-    image: ghcr.io/btouchard/shm:latest
+    image: ghcr.io/kolapsis/shm:latest
     container_name: shm-app
     restart: unless-stopped
     depends_on:
@@ -260,7 +260,7 @@ services:
       retries: 5
 
   app:
-    image: ghcr.io/btouchard/shm:latest
+    image: ghcr.io/kolapsis/shm:latest
     container_name: shm-app
     restart: unless-stopped
     depends_on:

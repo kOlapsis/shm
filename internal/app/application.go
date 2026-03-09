@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/btouchard/shm/internal/app/ports"
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/app/ports"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // UpdateApplicationInput holds the data for updating an application.

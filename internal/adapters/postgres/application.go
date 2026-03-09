@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // ApplicationRepository implements ports.ApplicationRepository for PostgreSQL.

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 func TestStarsService_GetStars(t *testing.T) {
@@ -40,7 +40,7 @@ func TestStarsService_GetStars(t *testing.T) {
 		// Replace the default client with one that redirects to test server
 		oldClient := service.httpClient
 		service.httpClient = &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout:   10 * time.Second,
 			Transport: &mockTransport{server: server},
 		}
 		defer func() { service.httpClient = oldClient }()

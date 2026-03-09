@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/btouchard/shm/internal/app"
-	"github.com/btouchard/shm/internal/app/ports"
+	"github.com/kolapsis/shm/internal/app"
+	"github.com/kolapsis/shm/internal/app/ports"
 )
 
 // Handlers holds HTTP handlers and their dependencies.
@@ -200,8 +200,8 @@ func (h *Handlers) AdminInstances(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse filter params
-	appName := r.URL.Query().Get("app")    // Filter by app name
-	search := r.URL.Query().Get("q")       // Search in instance_id, version, env, mode
+	appName := r.URL.Query().Get("app") // Filter by app name
+	search := r.URL.Query().Get("q")    // Search in instance_id, version, env, mode
 
 	instances, err := h.dashboard.ListInstances(r.Context(), offset, limit, appName, search)
 	if err != nil {

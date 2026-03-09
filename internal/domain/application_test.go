@@ -172,14 +172,14 @@ func TestNewGitHubURL(t *testing.T) {
 	}{
 		{
 			name:    "valid URL",
-			url:     "https://github.com/btouchard/shm",
-			want:    "https://github.com/btouchard/shm",
+			url:     "https://github.com/kolapsis/shm",
+			want:    "https://github.com/kolapsis/shm",
 			wantErr: nil,
 		},
 		{
 			name:    "valid URL with trailing slash",
-			url:     "https://github.com/btouchard/shm/",
-			want:    "https://github.com/btouchard/shm",
+			url:     "https://github.com/kolapsis/shm/",
+			want:    "https://github.com/kolapsis/shm",
 			wantErr: nil,
 		},
 		{
@@ -244,7 +244,7 @@ func TestGitHubURL_OwnerAndRepo(t *testing.T) {
 	}{
 		{
 			name:      "valid URL",
-			url:       "https://github.com/btouchard/shm",
+			url:       "https://github.com/kolapsis/shm",
 			wantOwner: "btouchard",
 			wantRepo:  "shm",
 			wantErr:   nil,

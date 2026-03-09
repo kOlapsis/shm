@@ -6,8 +6,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/btouchard/shm/internal/app/ports"
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/app/ports"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // RegisterInstanceInput holds the data needed to register an instance.
@@ -23,8 +23,8 @@ type RegisterInstanceInput struct {
 
 // InstanceService handles instance-related use cases.
 type InstanceService struct {
-	repo    ports.InstanceRepository
-	appSvc  *ApplicationService
+	repo   ports.InstanceRepository
+	appSvc *ApplicationService
 }
 
 // NewInstanceService creates a new InstanceService.

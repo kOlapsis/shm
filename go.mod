@@ -1,4 +1,4 @@
-module github.com/btouchard/shm
+module github.com/kolapsis/shm
 
 go 1.24.5
 

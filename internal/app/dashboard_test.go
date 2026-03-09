@@ -7,18 +7,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/btouchard/shm/internal/app/ports"
-	"github.com/btouchard/shm/internal/domain"
+	"github.com/kolapsis/shm/internal/app/ports"
+	"github.com/kolapsis/shm/internal/domain"
 )
 
 // mockDashboardReader is a test double for ports.DashboardReader.
 type mockDashboardReader struct {
-	stats         ports.DashboardStats
-	instances     []ports.InstanceSummary
-	timeSeries    ports.MetricsTimeSeries
-	statsErr      error
-	listErr       error
-	tsErr         error
+	stats      ports.DashboardStats
+	instances  []ports.InstanceSummary
+	timeSeries ports.MetricsTimeSeries
+	statsErr   error
+	listErr    error
+	tsErr      error
 	// Badge-specific fields
 	instanceCount int
 	version       string

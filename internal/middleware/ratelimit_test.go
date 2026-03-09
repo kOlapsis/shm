@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/btouchard/shm/internal/config"
+	"github.com/kolapsis/shm/internal/config"
 )
 
 // okHandler is a simple handler that returns 200 OK
