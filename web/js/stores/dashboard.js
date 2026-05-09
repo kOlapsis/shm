@@ -318,16 +318,27 @@ export default {
                 if (isSingleAppView) {
                     const currentPage = this.loadedPages[appName] || 0;
                     const displayCount = (currentPage + 1) * this.INSTANCES_PER_PAGE;
+                    const localHasMore = displayCount < instances.length;
                     result[appName] = {
                         ...group,
                         displayedInstances: instances.slice(0, displayCount),
-                        hasMore: displayCount < instances.length || this.hasMoreFromApi
+                        // Local pagination still has rows to reveal
+                        hasMore: localHasMore,
+                        // Server may have more rows beyond what's already cached
+                        canFetchMore: this.hasMoreFromApi,
+                        // Currently fetching more from the API
+                        isFetchingMore: this.loadingMore,
+                        // Everything is on screen and there is nothing left to fetch
+                        isExhausted: !localHasMore && !this.hasMoreFromApi && !this.loadingMore
                     };
                 } else {
                     result[appName] = {
                         ...group,
                         displayedInstances: instances.slice(0, this.INSTANCES_PREVIEW_COUNT),
-                        hasMore: false
+                        hasMore: false,
+                        canFetchMore: false,
+                        isFetchingMore: false,
+                        isExhausted: false
                     };
                 }
             }
@@ -338,19 +349,27 @@ export default {
 
     async loadMoreInstances(appName) {
         if (this.selectedApp === null) return;
+        if (this.loadingMore) return;
 
         const group = this.groupedInstances[appName];
         if (!group) return;
 
         const currentPage = this.loadedPages[appName] || 0;
-        const nextPage = currentPage + 1;
-        const endIdx = (nextPage + 1) * this.INSTANCES_PER_PAGE;
+        const currentDisplayCount = (currentPage + 1) * this.INSTANCES_PER_PAGE;
 
-        if (endIdx < group.instances.length) {
-            this.loadedPages[appName] = nextPage;
-        } else if (this.hasMoreFromApi) {
+        // Reveal the next slice of already-cached rows
+        if (currentDisplayCount < group.instances.length) {
+            this.loadedPages[appName] = currentPage + 1;
+            return;
+        }
+
+        // Cache exhausted — try fetching more from the server if it might have rows
+        if (this.hasMoreFromApi) {
             await this.fetchMoreFromApi();
-            this.loadedPages[appName] = nextPage;
+            const updatedGroup = this.groupedInstances[appName];
+            if (updatedGroup && currentDisplayCount < updatedGroup.instances.length) {
+                this.loadedPages[appName] = currentPage + 1;
+            }
         }
     }
 };
