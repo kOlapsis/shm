@@ -5,6 +5,7 @@
  */
 export default () => ({
     searchQuery: '',
+    mobileSearchOpen: false,
 
     init() {
         // Watch for search query changes
@@ -12,6 +13,16 @@ export default () => ({
             this.$store.dashboard.instanceSearchQuery = value;
             this.$store.dashboard.handleInstanceSearch();
         });
+    },
+
+    toggleMobileSearch() {
+        this.mobileSearchOpen = !this.mobileSearchOpen;
+        if (this.mobileSearchOpen) {
+            // focus the field after the transition opens it
+            this.$nextTick(() => {
+                this.$refs.mobileSearchInput?.focus();
+            });
+        }
     },
 
     /**

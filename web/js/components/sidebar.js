@@ -16,6 +16,9 @@ export default () => ({
      */
     selectApp(appName) {
         this.store.selectApp(appName);
+        if (this.$store.ui?.isMobile()) {
+            this.$store.ui.closeMenu();
+        }
     },
 
     /**

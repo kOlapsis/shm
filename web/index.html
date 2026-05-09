@@ -42,27 +42,87 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0d1117; }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+        /* Honour reduced-motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        /* Visible focus ring for keyboard users */
+        :focus-visible {
+            outline: 2px solid #6366f1;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        /* Skip-link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #4f46e5;
+            color: #fff;
+            padding: 8px 16px;
+            z-index: 100;
+            transition: top 0.2s;
+            font-weight: 600;
+        }
+        .skip-link:focus { top: 0; }
     </style>
 </head>
 
 <body class="bg-gray-950 text-gray-200 font-sans antialiased overflow-hidden">
 
+<!-- Accessibility: skip to main content -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- Mobile sidebar backdrop -->
+<div
+    x-data
+    x-show="$store.ui.mobileMenuOpen"
+    x-cloak
+    x-transition.opacity
+    @click="$store.ui.closeMenu()"
+    class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+    aria-hidden="true"
+></div>
+
 <!-- ===== SIDEBAR ===== -->
-<aside class="fixed left-0 top-0 h-full w-64 bg-gray-900 border-r border-gray-800 z-30 flex flex-col" x-data="sidebar">
+<aside
+    id="app-sidebar"
+    x-data="sidebar"
+    class="fixed left-0 top-0 h-full w-72 lg:w-64 bg-gray-900 border-r border-gray-800 z-40 flex flex-col transform transition-transform duration-300 ease-out lg:translate-x-0"
+    :class="$store.ui.mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'"
+    :aria-hidden="!$store.ui.mobileMenuOpen && $store.ui.isMobile() ? 'true' : 'false'"
+    aria-label="Applications navigation"
+>
     <!-- Header -->
     <div class="p-4 border-b border-gray-800">
-        <div class="flex items-center gap-3 mb-4">
-            <img src="/assets/shm-logo.svg" alt="SHM Logo" class="w-8 h-8">
-            <span class="font-bold text-lg tracking-tight text-white">SHM <span class="text-gray-500 font-medium">Hub</span></span>
+        <div class="flex items-center justify-between gap-3 mb-4">
+            <div class="flex items-center gap-3 min-w-0">
+                <img src="/assets/shm-logo.svg" alt="" class="w-8 h-8 flex-shrink-0" aria-hidden="true">
+                <span class="font-bold text-lg tracking-tight text-white truncate">SHM <span class="text-gray-500 font-medium">Hub</span></span>
+            </div>
+            <button
+                @click="$store.ui.closeMenu()"
+                class="lg:hidden p-2 -mr-1 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                aria-label="Close navigation menu"
+            >
+                <i class="ph-bold ph-x text-lg" aria-hidden="true"></i>
+            </button>
         </div>
 
         <!-- Search Bar -->
         <div class="relative">
-            <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+            <label for="sidebar-search" class="sr-only">Search applications</label>
+            <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm" aria-hidden="true"></i>
             <input
-                type="text"
+                id="sidebar-search"
+                type="search"
                 @input="onSearch($event.target.value)"
                 placeholder="Search apps..."
+                autocomplete="off"
                 class="w-full bg-gray-950 border border-gray-800 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500"
             >
         </div>
@@ -138,39 +198,100 @@
 </aside>
 
 <!-- ===== TOP NAVBAR ===== -->
-<nav class="fixed top-0 left-64 right-0 z-40 bg-gray-950/80 backdrop-blur-md border-b border-gray-800" x-data="navbar">
-    <div class="px-6">
-        <div class="flex h-16 items-center justify-between">
-            <div class="flex items-center gap-3">
-                <h1 class="text-xl font-bold text-white" x-text="title"></h1>
-                <span class="text-sm text-gray-500" x-text="countText"></span>
+<nav class="fixed top-0 left-0 lg:left-64 right-0 z-30 bg-gray-950/80 backdrop-blur-md border-b border-gray-800" x-data="navbar">
+    <div class="px-3 sm:px-4 lg:px-6">
+        <div class="flex h-16 items-center justify-between gap-2 sm:gap-3">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <!-- Hamburger (mobile only) -->
+                <button
+                    @click="$store.ui.toggleMenu()"
+                    class="lg:hidden flex-shrink-0 p-2.5 -ml-1 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                    :aria-expanded="$store.ui.mobileMenuOpen ? 'true' : 'false'"
+                    aria-controls="app-sidebar"
+                    aria-label="Toggle navigation menu"
+                >
+                    <i class="ph-bold ph-list text-xl" aria-hidden="true"></i>
+                </button>
+
+                <div class="min-w-0 flex-1">
+                    <h1 class="text-base sm:text-lg lg:text-xl font-bold text-white truncate" x-text="title"></h1>
+                    <span class="hidden sm:block text-xs text-gray-500 truncate" x-text="countText"></span>
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <div class="relative flex items-center">
-                    <div class="absolute left-3 w-4 h-4 flex items-center justify-center text-gray-500">
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <!-- Mobile: search-toggle button -->
+                <button
+                    @click="toggleMobileSearch()"
+                    class="sm:hidden p-2.5 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                    :aria-expanded="mobileSearchOpen ? 'true' : 'false'"
+                    aria-controls="instance-search"
+                    aria-label="Search instances"
+                >
+                    <i class="ph-bold ph-magnifying-glass text-lg" aria-hidden="true"></i>
+                </button>
+
+                <!-- Desktop / sm+: inline search input -->
+                <div class="relative hidden sm:flex items-center">
+                    <label for="instance-search" class="sr-only">Search instances</label>
+                    <div class="absolute left-3 w-4 h-4 flex items-center justify-center text-gray-500" aria-hidden="true">
                         <i x-show="!isSearching" class="ph-bold ph-magnifying-glass text-sm"></i>
                         <i x-show="isSearching" class="ph-bold ph-spinner animate-spin text-sm"></i>
                     </div>
                     <input
-                        type="text"
+                        id="instance-search"
+                        type="search"
                         x-model="searchQuery"
                         placeholder="Search instances..."
-                        class="bg-gray-900 border border-gray-800 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 w-64"
+                        autocomplete="off"
+                        class="bg-gray-900 border border-gray-800 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 w-40 md:w-56 lg:w-64"
                     >
                 </div>
+            </div>
+        </div>
+
+        <!-- Mobile collapsible search row -->
+        <div
+            x-show="mobileSearchOpen"
+            x-cloak
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 -translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            class="sm:hidden pb-3"
+        >
+            <div class="relative">
+                <label for="instance-search-mobile" class="sr-only">Search instances</label>
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center text-gray-500" aria-hidden="true">
+                    <i x-show="!isSearching" class="ph-bold ph-magnifying-glass text-sm"></i>
+                    <i x-show="isSearching" class="ph-bold ph-spinner animate-spin text-sm"></i>
+                </div>
+                <input
+                    id="instance-search-mobile"
+                    type="search"
+                    x-model="searchQuery"
+                    x-ref="mobileSearchInput"
+                    placeholder="Search instances..."
+                    autocomplete="off"
+                    class="w-full bg-gray-900 border border-gray-800 rounded-lg pl-9 pr-3 py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500"
+                >
             </div>
         </div>
     </div>
 </nav>
 
 <!-- ===== MAIN CONTENT ===== -->
-<main class="fixed top-16 left-64 right-0 bottom-0 overflow-y-auto" x-data="mainContent" @scroll.passive="handleScroll">
-    <div class="p-6">
+<main
+    id="main-content"
+    class="fixed top-16 left-0 lg:left-64 right-0 bottom-0 overflow-y-auto"
+    x-data="mainContent"
+    @scroll.passive="handleScroll"
+    tabindex="-1"
+>
+    <div class="p-3 sm:p-4 lg:p-6">
         <template x-for="(group, appName) in displayedGroups" :key="appName">
-            <section class="mb-12 animate-fade-in" x-data="appSection">
+            <section class="mb-8 sm:mb-12 animate-fade-in" x-data="appSection">
                 <!-- App Header -->
-                <div class="flex items-center justify-between mb-6 border-b border-gray-800 pb-4">
-                    <div class="flex items-center gap-4">
+                <div class="flex items-center justify-between gap-3 mb-4 sm:mb-6 border-b border-gray-800 pb-3 sm:pb-4">
+                    <div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                         <!-- Logo or Initial (with fallback) -->
                         <div class="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center shadow-inner overflow-hidden"
                              x-data="{ get logoUrl() { return $store.dashboard.applications.find(a => a.slug === group.appSlug)?.logo_url } }">
@@ -188,9 +309,9 @@
                                 x-text="appName.charAt(0).toUpperCase()"
                             ></span>
                         </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="text-xl font-bold text-white" x-text="appName"></h2>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h2 class="text-lg sm:text-xl font-bold text-white truncate max-w-[200px] sm:max-w-none" x-text="appName"></h2>
                                 <template x-if="group.githubUrl && group.githubStars > 0">
                                     <a :href="group.githubUrl" target="_blank" class="flex items-center gap-1 px-2 py-0.5 rounded bg-gray-800 border border-gray-700 hover:border-gray-600 transition-colors text-xs text-gray-400 hover:text-gray-300">
                                         <i class="ph-fill ph-star text-yellow-500"></i>
@@ -264,34 +385,35 @@
                     x-transition:leave="transition ease-in duration-150"
                     x-transition:leave-start="opacity-100 translate-y-0"
                     x-transition:leave-end="opacity-0 -translate-y-2"
-                    class="mb-6 bg-gray-900 border border-gray-800 rounded-xl overflow-hidden"
+                    class="mb-4 sm:mb-6 bg-gray-900 border border-gray-800 rounded-xl overflow-hidden"
                 >
                     <!-- Chart Header -->
-                    <div class="flex items-center justify-between border-b border-gray-800 px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <i class="ph-bold ph-chart-line text-primary-500 text-lg"></i>
-                            <div>
-                                <h3 class="text-sm font-bold text-white" x-text="formatKey(getSelectedMetric(appName))"></h3>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-800 px-4 sm:px-6 py-3 sm:py-4">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <i class="ph-bold ph-chart-line text-primary-500 text-lg flex-shrink-0" aria-hidden="true"></i>
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-bold text-white truncate" x-text="formatKey(getSelectedMetric(appName))"></h3>
                                 <p class="text-xs text-gray-500">Time series evolution</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap" role="group" aria-label="Chart time range">
                             <template x-for="period in periods" :key="period">
                                 <button
                                     @click="selectPeriod(appName, period)"
-                                    class="px-3 py-1 rounded text-xs font-medium transition-colors"
+                                    class="px-3 py-1.5 rounded text-xs font-medium transition-colors"
                                     :class="getPeriod(appName) === period ? 'bg-primary-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-300'"
+                                    :aria-pressed="getPeriod(appName) === period ? 'true' : 'false'"
                                     x-text="period"
                                 ></button>
                             </template>
-                            <button @click="closeChart(appName)" class="ml-2 p-1.5 text-gray-500 hover:text-white hover:bg-gray-800 rounded transition-colors" aria-label="Close chart">
+                            <button @click="closeChart(appName)" class="ml-1 p-2 text-gray-500 hover:text-white hover:bg-gray-800 rounded transition-colors" aria-label="Close chart">
                                 <i class="ph-bold ph-x text-sm" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
 
                     <!-- Chart Content -->
-                    <div class="p-6 relative">
+                    <div class="p-3 sm:p-6 relative">
                         <div x-show="isChartLoading(appName)" class="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-10">
                             <div class="text-center">
                                 <i class="ph-bold ph-circle-notch animate-spin text-3xl text-gray-500"></i>
@@ -331,7 +453,15 @@
                             </thead>
                             <tbody class="divide-y divide-gray-800/50">
                                 <template x-for="inst in group.displayedInstances" :key="inst.instance_id">
-                                    <tr class="hover:bg-gray-800/40 transition-colors cursor-pointer group" @click="openDrawer(inst, group.resourceKeys)">
+                                    <tr
+                                        class="hover:bg-gray-800/40 focus:bg-gray-800/60 focus:outline-none transition-colors cursor-pointer group"
+                                        tabindex="0"
+                                        role="button"
+                                        :aria-label="`Open details for instance ${inst.instance_id.substring(0, 8)}`"
+                                        @click="openDrawer(inst, group.resourceKeys)"
+                                        @keydown.enter.prevent="openDrawer(inst, group.resourceKeys)"
+                                        @keydown.space.prevent="openDrawer(inst, group.resourceKeys)"
+                                    >
                                         <td class="px-5 py-3">
                                             <div class="flex items-center gap-2">
                                                 <div class="w-1.5 h-1.5 rounded-full" :class="inst.status === 'active' ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-red-500'"></div>
@@ -367,10 +497,39 @@
                         </table>
                     </div>
 
-                    <template x-if="group.hasMore">
-                        <div class="text-center py-4 text-gray-500 text-sm">
-                            <i class="ph-bold ph-circle-notch animate-spin"></i>
-                            <span class="ml-2">Loading more instances...</span>
+                    <!-- Pagination footer: actively loading -->
+                    <template x-if="group.isFetchingMore">
+                        <div class="flex items-center justify-center gap-2 py-4 text-gray-500 text-sm" role="status" aria-live="polite">
+                            <i class="ph-bold ph-circle-notch animate-spin" aria-hidden="true"></i>
+                            <span>Loading more instances...</span>
+                        </div>
+                    </template>
+
+                    <!-- Pagination footer: more available locally, scroll hint -->
+                    <template x-if="!group.isFetchingMore && group.hasMore">
+                        <div class="flex items-center justify-center gap-2 py-4 text-gray-500 text-xs" aria-hidden="true">
+                            <i class="ph-bold ph-caret-double-down" aria-hidden="true"></i>
+                            <span x-text="`Scroll for more (${group.displayedInstances.length} of ${group.instances.length})`"></span>
+                        </div>
+                    </template>
+
+                    <!-- Pagination footer: cache shown, server may have more -->
+                    <template x-if="!group.isFetchingMore && !group.hasMore && group.canFetchMore">
+                        <button
+                            @click="$store.dashboard.loadMoreInstances(appName)"
+                            class="w-full flex items-center justify-center gap-2 py-4 text-gray-500 hover:text-gray-300 hover:bg-gray-800/40 transition-colors text-xs"
+                        >
+                            <i class="ph-bold ph-arrow-down" aria-hidden="true"></i>
+                            <span>Load more from server</span>
+                        </button>
+                    </template>
+
+                    <!-- Pagination footer: exhausted -->
+                    <template x-if="group.isExhausted && group.displayedInstances.length >= 25">
+                        <div class="flex items-center justify-center gap-2 py-4 text-gray-600 text-xs" aria-hidden="true">
+                            <span class="h-px w-8 bg-gray-800"></span>
+                            <span x-text="`All ${group.displayedInstances.length} instances loaded`"></span>
+                            <span class="h-px w-8 bg-gray-800"></span>
                         </div>
                     </template>
                 </div>
@@ -403,10 +562,10 @@
             <template x-if="instance">
                 <div class="flex flex-col h-full">
                     <!-- Drawer Header -->
-                    <div class="px-6 py-5 border-b border-gray-800 bg-gray-900 flex justify-between items-start">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <h3 id="drawer-title" class="text-xl font-bold text-white font-mono tracking-tight" x-text="instance.instance_id"></h3>
+                    <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-800 bg-gray-900 flex justify-between items-start gap-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 id="drawer-title" class="text-base sm:text-xl font-bold text-white font-mono tracking-tight break-all" x-text="instance.instance_id"></h3>
                                 <span
                                     class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
                                     :class="instance.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'"
@@ -427,7 +586,7 @@
 
                     <!-- Delete Confirmation -->
                     <template x-if="confirmDelete">
-                        <div class="px-6 py-4 bg-red-500/5 border-b border-red-500/20">
+                        <div class="px-4 sm:px-6 py-4 bg-red-500/5 border-b border-red-500/20" role="alertdialog">
                             <div class="flex items-start gap-3">
                                 <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
                                     <i class="ph-bold ph-warning text-red-500 text-xl"></i>
@@ -461,7 +620,7 @@
                     </template>
 
                     <!-- Drawer Content -->
-                    <div class="p-6 overflow-y-auto flex-1 space-y-8">
+                    <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6 sm:space-y-8">
                         <!-- System Health -->
                         <div>
                             <h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -536,13 +695,13 @@
 </div>
 
 <!-- ===== APPLICATION EDIT MODAL ===== -->
-<div x-data="appEditModal" x-show="$store.dashboard.editingApp !== null" x-cloak class="fixed inset-0 z-50 flex items-center justify-center" @keydown.escape.window="close()" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<div x-data="appEditModal" x-show="$store.dashboard.editingApp !== null" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" @keydown.escape.window="close()" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <!-- Backdrop -->
         <div @click="close()" class="absolute inset-0 bg-black/70 backdrop-blur-[2px]" x-show="$store.dashboard.editingApp !== null" x-transition.opacity aria-hidden="true"></div>
 
         <!-- Modal -->
         <div
-            class="relative w-full max-w-md bg-gray-900 border border-gray-800 rounded-xl shadow-2xl"
+            class="relative w-full max-w-md bg-gray-900 border border-gray-800 rounded-t-xl sm:rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto"
             x-show="$store.dashboard.editingApp !== null"
             x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0 scale-95"
@@ -554,18 +713,18 @@
             <template x-if="$store.dashboard.editingApp">
                 <div>
                     <!-- Header -->
-                    <div class="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
-                        <div>
+                    <div class="px-4 sm:px-6 py-4 border-b border-gray-800 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
                             <h3 id="modal-title" class="text-lg font-bold text-white">Edit Application</h3>
-                            <p class="text-sm text-gray-500" x-text="$store.dashboard.editingApp.name"></p>
+                            <p class="text-sm text-gray-500 truncate" x-text="$store.dashboard.editingApp.name"></p>
                         </div>
-                        <button @click="close()" class="p-2 text-gray-500 hover:text-white hover:bg-gray-800 rounded-lg transition-colors" aria-label="Close modal">
+                        <button @click="close()" class="p-2 text-gray-500 hover:text-white hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0" aria-label="Close modal">
                             <i class="ph-bold ph-x text-lg" aria-hidden="true"></i>
                         </button>
                     </div>
 
                     <!-- Body -->
-                    <div class="p-6 space-y-5">
+                    <div class="p-4 sm:p-6 space-y-5">
                         <!-- Error Message -->
                         <template x-if="error">
                             <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400 flex items-center gap-2">
@@ -654,7 +813,7 @@
                     </div>
 
                     <!-- Footer -->
-                    <div class="px-6 py-4 border-t border-gray-800 flex items-center justify-end gap-3">
+                    <div class="px-4 sm:px-6 py-4 border-t border-gray-800 flex items-center justify-end gap-3">
                         <button
                             @click="close()"
                             class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
