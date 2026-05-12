@@ -51,7 +51,8 @@ type DashboardStats struct {
 	TotalInstances  int
 	ActiveInstances int
 	GlobalMetrics   map[string]int64
-	PerAppCounts    map[string]int // Instance count per app_name
+	PerAppCounts    map[string]int            // Instance count per app_name
+	PerAppMetrics   map[string]map[string]int64 // Metric sums per app_name
 }
 
 // InstanceSummary holds instance data with latest metrics for listing.

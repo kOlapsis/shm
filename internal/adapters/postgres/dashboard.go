@@ -28,6 +28,7 @@ func (r *DashboardReader) GetStats(ctx context.Context) (ports.DashboardStats, e
 	var stats ports.DashboardStats
 	stats.GlobalMetrics = make(map[string]int64)
 	stats.PerAppCounts = make(map[string]int)
+	stats.PerAppMetrics = make(map[string]map[string]int64)
 
 	// Get instance counts
 	countsQuery := `
@@ -62,14 +63,15 @@ func (r *DashboardReader) GetStats(ctx context.Context) (ports.DashboardStats, e
 		stats.PerAppCounts[appName] = count
 	}
 
-	// Get aggregated metrics from latest snapshots
+	// Get aggregated metrics from latest snapshots (global and per-app)
 	metricsQuery := `
-		SELECT data
+		SELECT i.app_name, s.data
 		FROM (
-			SELECT DISTINCT ON (instance_id) data
+			SELECT DISTINCT ON (instance_id) instance_id, data
 			FROM snapshots
 			ORDER BY instance_id, snapshot_at DESC
-		) as latest
+		) s
+		JOIN instances i ON s.instance_id = i.instance_id
 	`
 	rows, err := r.db.QueryContext(ctx, metricsQuery)
 	if err != nil {
@@ -78,8 +80,9 @@ func (r *DashboardReader) GetStats(ctx context.Context) (ports.DashboardStats, e
 	defer rows.Close()
 
 	for rows.Next() {
+		var appName string
 		var rawJSON []byte
-		if err := rows.Scan(&rawJSON); err != nil {
+		if err := rows.Scan(&appName, &rawJSON); err != nil {
 			continue
 		}
 
@@ -88,13 +91,22 @@ func (r *DashboardReader) GetStats(ctx context.Context) (ports.DashboardStats, e
 			continue
 		}
 
+		if _, ok := stats.PerAppMetrics[appName]; !ok {
+			stats.PerAppMetrics[appName] = make(map[string]int64)
+		}
+
 		for key, val := range metrics {
+			var n int64
 			switch v := val.(type) {
 			case float64:
-				stats.GlobalMetrics[key] += int64(v)
+				n = int64(v)
 			case int:
-				stats.GlobalMetrics[key] += int64(v)
+				n = int64(v)
+			default:
+				continue
 			}
+			stats.GlobalMetrics[key] += n
+			stats.PerAppMetrics[appName][key] += n
 		}
 	}
 

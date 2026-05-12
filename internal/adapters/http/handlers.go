@@ -178,6 +178,7 @@ func (h *Handlers) AdminStats(w http.ResponseWriter, r *http.Request) {
 		"active_instances": stats.ActiveInstances,
 		"global_metrics":   stats.GlobalMetrics,
 		"per_app_counts":   stats.PerAppCounts,
+		"per_app_metrics":  stats.PerAppMetrics,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(response)
