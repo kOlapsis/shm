@@ -34,11 +34,11 @@ func TestDashboardReader_GetStats(t *testing.T) {
 			AddRow("otherapp", 40)
 		mock.ExpectQuery("SELECT app_name, COUNT").WillReturnRows(perAppRows)
 
-		// Mock metrics query
-		metricsRows := sqlmock.NewRows([]string{"data"}).
-			AddRow(`{"cpu": 50, "memory": 1024}`).
-			AddRow(`{"cpu": 30, "memory": 512}`)
-		mock.ExpectQuery("SELECT data FROM").WillReturnRows(metricsRows)
+		// Mock metrics query (now includes app_name for per-app aggregation)
+		metricsRows := sqlmock.NewRows([]string{"app_name", "data"}).
+			AddRow("myapp", `{"cpu": 50, "memory": 1024}`).
+			AddRow("myapp", `{"cpu": 30, "memory": 512}`)
+		mock.ExpectQuery("SELECT i.app_name").WillReturnRows(metricsRows)
 
 		stats, err := reader.GetStats(ctx)
 		if err != nil {
@@ -56,6 +56,9 @@ func TestDashboardReader_GetStats(t *testing.T) {
 		}
 		if stats.GlobalMetrics["memory"] != 1536 {
 			t.Errorf("expected memory=1536, got %d", stats.GlobalMetrics["memory"])
+		}
+		if stats.PerAppMetrics["myapp"]["cpu"] != 80 {
+			t.Errorf("expected per-app cpu=80, got %d", stats.PerAppMetrics["myapp"]["cpu"])
 		}
 	})
 }
