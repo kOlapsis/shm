@@ -25,6 +25,7 @@ export default {
     apiOffset: 0,
     hasMoreFromApi: true,
     loadedPages: {},
+    sortConfig: {},
 
     API_PAGE_SIZE: 50,
     INSTANCES_PER_PAGE: 25,
@@ -264,10 +265,16 @@ export default {
             }
         }
 
-        for (const group of Object.values(groups)) {
+        for (const [appName, group] of Object.entries(groups)) {
             group.businessKeys = [...group.businessKeys].sort();
             group.resourceKeys = [...group.resourceKeys].sort();
             group.stringKeys = [...group.stringKeys].sort();
+
+            // Override client-computed sums with DB-accurate aggregates
+            const serverSums = this.stats.per_app_metrics?.[appName];
+            if (serverSums) {
+                group.sums = { ...serverSums };
+            }
         }
 
         this.groupedInstances = groups;
@@ -312,7 +319,23 @@ export default {
 
         for (const [appName, group] of Object.entries(groups)) {
             if (!group) continue;
-            const instances = group.instances;
+            const sort = this.sortConfig[appName];
+            const instances = sort ? [...group.instances].sort((a, b) => {
+                let av, bv;
+                if (sort.key === 'instance_id') {
+                    av = a.instance_id; bv = b.instance_id;
+                } else if (sort.key === 'environment') {
+                    av = a.environment || ''; bv = b.environment || '';
+                } else if (sort.key === 'last_seen_at') {
+                    av = new Date(a.last_seen_at); bv = new Date(b.last_seen_at);
+                } else {
+                    av = a.metrics?.[sort.key] ?? -Infinity;
+                    bv = b.metrics?.[sort.key] ?? -Infinity;
+                }
+                if (av < bv) return sort.dir === 'asc' ? -1 : 1;
+                if (av > bv) return sort.dir === 'asc' ? 1 : -1;
+                return 0;
+            }) : group.instances;
 
             if (instances.length) {
                 if (isSingleAppView) {
@@ -345,6 +368,22 @@ export default {
         }
 
         return result;
+    },
+
+    setSortKey(appName, key) {
+        const current = this.sortConfig[appName];
+        if (current && current.key === key) {
+            this.sortConfig[appName] = { key, dir: current.dir === 'asc' ? 'desc' : 'asc' };
+        } else {
+            this.sortConfig[appName] = { key, dir: 'asc' };
+        }
+        this.refreshKey++;
+    },
+
+    getSortIcon(appName, key) {
+        const sort = this.sortConfig[appName];
+        if (!sort || sort.key !== key) return 'ph-caret-up-down text-gray-700';
+        return sort.dir === 'asc' ? 'ph-caret-up text-gray-400' : 'ph-caret-down text-gray-400';
     },
 
     async loadMoreInstances(appName) {
