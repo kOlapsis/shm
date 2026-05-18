@@ -17,6 +17,43 @@ const (
 	StatusRevoked InstanceStatus = "revoked"
 )
 
+// InstanceHealth is the freshness derived from LastSeenAt — independent
+// from the registration lifecycle (InstanceStatus).
+type InstanceHealth string
+
+const (
+	HealthOK        InstanceHealth = "ok"        // last seen < LateAfter
+	HealthLate      InstanceHealth = "late"      // LateAfter <= last seen < SilentAfter
+	HealthSilent    InstanceHealth = "silent"    // SilentAfter <= last seen < InactiveAfter
+	HealthInactive  InstanceHealth = "inactive"  // InactiveAfter <= last seen < AbandonedAfter (hidden from dashboard)
+	HealthAbandoned InstanceHealth = "abandoned" // last seen >= AbandonedAfter (purged from DB)
+)
+
+// Freshness thresholds. Default push interval is 1h (see sdk/golang/client.go).
+const (
+	LateAfter      = 3 * time.Hour
+	SilentAfter    = 24 * time.Hour
+	InactiveAfter  = 7 * 24 * time.Hour
+	AbandonedAfter = 30 * 24 * time.Hour
+)
+
+// ComputeHealth returns the InstanceHealth for a given last-seen time.
+func ComputeHealth(lastSeenAt, now time.Time) InstanceHealth {
+	age := now.Sub(lastSeenAt)
+	switch {
+	case age >= AbandonedAfter:
+		return HealthAbandoned
+	case age >= InactiveAfter:
+		return HealthInactive
+	case age >= SilentAfter:
+		return HealthSilent
+	case age >= LateAfter:
+		return HealthLate
+	default:
+		return HealthOK
+	}
+}
+
 // Valid returns true if the status is a known value.
 func (s InstanceStatus) Valid() bool {
 	switch s {

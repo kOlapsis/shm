@@ -5,6 +5,7 @@ package domain
 import (
 	"errors"
 	"testing"
+	"time"
 )
 
 func TestNewInstanceID(t *testing.T) {
@@ -262,5 +263,35 @@ func TestInstance_Revoke(t *testing.T) {
 	}
 	if inst2.Status != StatusRevoked {
 		t.Errorf("expected status %s, got %s", StatusRevoked, inst2.Status)
+	}
+}
+
+func TestComputeHealth(t *testing.T) {
+	now := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+
+	cases := []struct {
+		name string
+		ago  time.Duration
+		want InstanceHealth
+	}{
+		{"fresh", time.Minute, HealthOK},
+		{"just-under-late", LateAfter - time.Second, HealthOK},
+		{"late-boundary", LateAfter, HealthLate},
+		{"mid-late", 12 * time.Hour, HealthLate},
+		{"silent-boundary", SilentAfter, HealthSilent},
+		{"mid-silent", 3 * 24 * time.Hour, HealthSilent},
+		{"inactive-boundary", InactiveAfter, HealthInactive},
+		{"mid-inactive", 14 * 24 * time.Hour, HealthInactive},
+		{"abandoned-boundary", AbandonedAfter, HealthAbandoned},
+		{"long-abandoned", 100 * 24 * time.Hour, HealthAbandoned},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := ComputeHealth(now.Add(-tc.ago), now)
+			if got != tc.want {
+				t.Errorf("age=%s: got %s, want %s", tc.ago, got, tc.want)
+			}
+		})
 	}
 }
