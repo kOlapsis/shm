@@ -23,9 +23,9 @@ func TestDashboardReader_GetStats(t *testing.T) {
 
 		reader := NewDashboardReader(db)
 
-		// Mock counts query
-		countRows := sqlmock.NewRows([]string{"total", "active"}).
-			AddRow(100, 75)
+		// Mock counts query (total, ok, late, silent)
+		countRows := sqlmock.NewRows([]string{"total", "active", "late", "silent"}).
+			AddRow(100, 75, 15, 10)
 		mock.ExpectQuery("SELECT.+COUNT").WillReturnRows(countRows)
 
 		// Mock per-app counts query
@@ -50,6 +50,12 @@ func TestDashboardReader_GetStats(t *testing.T) {
 		}
 		if stats.ActiveInstances != 75 {
 			t.Errorf("expected 75 active, got %d", stats.ActiveInstances)
+		}
+		if stats.LateInstances != 15 {
+			t.Errorf("expected 15 late, got %d", stats.LateInstances)
+		}
+		if stats.SilentInstances != 10 {
+			t.Errorf("expected 10 silent, got %d", stats.SilentInstances)
 		}
 		if stats.GlobalMetrics["cpu"] != 80 {
 			t.Errorf("expected cpu=80, got %d", stats.GlobalMetrics["cpu"])

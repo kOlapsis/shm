@@ -79,6 +79,17 @@ func (m *mockInstanceRepo) Delete(ctx context.Context, id domain.InstanceID) err
 	return nil
 }
 
+func (m *mockInstanceRepo) DeleteStale(ctx context.Context, olderThan time.Time) (int64, error) {
+	var n int64
+	for id, inst := range m.instances {
+		if inst.LastSeenAt.Before(olderThan) {
+			delete(m.instances, id)
+			n++
+		}
+	}
+	return n, nil
+}
+
 type mockSnapshotRepo struct {
 	snapshots []*domain.Snapshot
 	saveErr   error
@@ -352,6 +363,7 @@ func TestHandlers_AdminInstances(t *testing.T) {
 				AppName:    "myapp",
 				AppVersion: "1.0.0",
 				Status:     domain.StatusActive,
+				Health:     domain.HealthOK,
 			},
 		},
 	}
@@ -378,5 +390,8 @@ func TestHandlers_AdminInstances(t *testing.T) {
 	}
 	if response[0]["app_name"] != "myapp" {
 		t.Errorf("expected app_name=myapp, got %v", response[0]["app_name"])
+	}
+	if response[0]["health"] != "ok" {
+		t.Errorf("expected health=ok, got %v", response[0]["health"])
 	}
 }

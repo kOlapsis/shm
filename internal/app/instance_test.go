@@ -80,6 +80,17 @@ func (m *mockInstanceRepo) Delete(ctx context.Context, id domain.InstanceID) err
 	return nil
 }
 
+func (m *mockInstanceRepo) DeleteStale(ctx context.Context, olderThan time.Time) (int64, error) {
+	var n int64
+	for id, inst := range m.instances {
+		if inst.LastSeenAt.Before(olderThan) {
+			delete(m.instances, id)
+			n++
+		}
+	}
+	return n, nil
+}
+
 const (
 	validUUID = "550e8400-e29b-41d4-a716-446655440000"
 	validKey  = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"

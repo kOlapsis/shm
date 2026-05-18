@@ -5,6 +5,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/kolapsis/shm/internal/app/ports"
 	"github.com/kolapsis/shm/internal/domain"
@@ -158,4 +159,15 @@ func (s *InstanceService) Delete(ctx context.Context, instanceID string) error {
 	}
 
 	return nil
+}
+
+// PurgeAbandoned deletes every instance whose last_seen_at exceeds
+// domain.AbandonedAfter. Snapshots cascade via FK. Returns the number purged.
+func (s *InstanceService) PurgeAbandoned(ctx context.Context) (int64, error) {
+	cutoff := time.Now().UTC().Add(-domain.AbandonedAfter)
+	n, err := s.repo.DeleteStale(ctx, cutoff)
+	if err != nil {
+		return 0, fmt.Errorf("purge abandoned: %w", err)
+	}
+	return n, nil
 }

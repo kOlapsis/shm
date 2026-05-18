@@ -32,6 +32,10 @@ type InstanceRepository interface {
 	// Delete removes an instance and all its associated snapshots.
 	// Returns domain.ErrInstanceNotFound if the instance doesn't exist.
 	Delete(ctx context.Context, id domain.InstanceID) error
+
+	// DeleteStale removes every instance whose last_seen_at is older than
+	// `olderThan`. Snapshots cascade via FK. Returns the number of rows deleted.
+	DeleteStale(ctx context.Context, olderThan time.Time) (int64, error)
 }
 
 // SnapshotRepository defines persistence operations for snapshots.
@@ -47,11 +51,14 @@ type SnapshotRepository interface {
 }
 
 // DashboardStats holds aggregated statistics for the dashboard.
+// Counts exclude inactive/abandoned instances (last_seen >= InactiveAfter).
 type DashboardStats struct {
-	TotalInstances  int
-	ActiveInstances int
+	TotalInstances  int   // All non-inactive instances
+	ActiveInstances int   // Healthy (< LateAfter)
+	LateInstances   int   // LateAfter .. SilentAfter
+	SilentInstances int   // SilentAfter .. InactiveAfter
 	GlobalMetrics   map[string]int64
-	PerAppCounts    map[string]int            // Instance count per app_name
+	PerAppCounts    map[string]int              // Instance count per app_name (visible only)
 	PerAppMetrics   map[string]map[string]int64 // Metric sums per app_name
 }
 
@@ -63,6 +70,7 @@ type InstanceSummary struct {
 	AppVersion     string
 	Environment    string
 	Status         domain.InstanceStatus
+	Health         domain.InstanceHealth // Derived from LastSeenAt
 	DeploymentMode string
 	LastSeenAt     time.Time
 	Metrics        domain.Metrics

@@ -176,6 +176,8 @@ func (h *Handlers) AdminStats(w http.ResponseWriter, r *http.Request) {
 	response := map[string]any{
 		"total_instances":  stats.TotalInstances,
 		"active_instances": stats.ActiveInstances,
+		"late_instances":   stats.LateInstances,
+		"silent_instances": stats.SilentInstances,
 		"global_metrics":   stats.GlobalMetrics,
 		"per_app_counts":   stats.PerAppCounts,
 		"per_app_metrics":  stats.PerAppMetrics,
@@ -227,6 +229,7 @@ func (h *Handlers) AdminInstances(w http.ResponseWriter, r *http.Request) {
 			"app_version":     inst.AppVersion,
 			"environment":     inst.Environment,
 			"status":          string(inst.Status),
+			"health":          string(inst.Health),
 			"last_seen_at":    inst.LastSeenAt,
 			"deployment_mode": inst.DeploymentMode,
 			"metrics":         inst.Metrics,

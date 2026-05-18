@@ -13,6 +13,16 @@ import (
 	"github.com/kolapsis/shm/internal/domain"
 )
 
+// visibleWindow returns the SQL fragment matching non-inactive instances.
+// Inactive (>= InactiveAfter) instances are hidden from the dashboard.
+func visibleWindow(alias string) string {
+	prefix := ""
+	if alias != "" {
+		prefix = alias + "."
+	}
+	return fmt.Sprintf("%slast_seen_at > NOW() - INTERVAL '%d seconds'", prefix, int(domain.InactiveAfter.Seconds()))
+}
+
 // DashboardReader implements ports.DashboardReader for PostgreSQL.
 type DashboardReader struct {
 	db *sql.DB
@@ -24,30 +34,45 @@ func NewDashboardReader(db *sql.DB) *DashboardReader {
 }
 
 // GetStats returns aggregated dashboard statistics.
+// Counts include only visible instances (last_seen_at within InactiveAfter).
 func (r *DashboardReader) GetStats(ctx context.Context) (ports.DashboardStats, error) {
 	var stats ports.DashboardStats
 	stats.GlobalMetrics = make(map[string]int64)
 	stats.PerAppCounts = make(map[string]int)
 	stats.PerAppMetrics = make(map[string]map[string]int64)
 
-	// Get instance counts
-	countsQuery := `
+	// Counts per health bucket. Only visible instances are counted.
+	countsQuery := fmt.Sprintf(`
 		SELECT
-			COUNT(*),
-			COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '30 days')
+			COUNT(*) FILTER (WHERE %[1]s),
+			COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '%[2]d seconds'),
+			COUNT(*) FILTER (WHERE last_seen_at <= NOW() - INTERVAL '%[2]d seconds'
+				AND last_seen_at > NOW() - INTERVAL '%[3]d seconds'),
+			COUNT(*) FILTER (WHERE last_seen_at <= NOW() - INTERVAL '%[3]d seconds'
+				AND %[1]s)
 		FROM instances
-	`
-	if err := r.db.QueryRowContext(ctx, countsQuery).Scan(&stats.TotalInstances, &stats.ActiveInstances); err != nil {
+	`,
+		visibleWindow(""),
+		int(domain.LateAfter.Seconds()),
+		int(domain.SilentAfter.Seconds()),
+	)
+	if err := r.db.QueryRowContext(ctx, countsQuery).Scan(
+		&stats.TotalInstances,
+		&stats.ActiveInstances,
+		&stats.LateInstances,
+		&stats.SilentInstances,
+	); err != nil {
 		return stats, fmt.Errorf("get instance counts: %w", err)
 	}
 
-	// Get per-app instance counts
-	perAppQuery := `
+	// Per-app instance counts (visible only)
+	perAppQuery := fmt.Sprintf(`
 		SELECT app_name, COUNT(*) as count
 		FROM instances
 		WHERE app_name IS NOT NULL AND app_name != ''
+		  AND %s
 		GROUP BY app_name
-	`
+	`, visibleWindow(""))
 	appRows, err := r.db.QueryContext(ctx, perAppQuery)
 	if err != nil {
 		return stats, fmt.Errorf("get per-app counts: %w", err)
@@ -63,8 +88,8 @@ func (r *DashboardReader) GetStats(ctx context.Context) (ports.DashboardStats, e
 		stats.PerAppCounts[appName] = count
 	}
 
-	// Get aggregated metrics from latest snapshots (global and per-app)
-	metricsQuery := `
+	// Aggregated metrics from latest snapshots (visible instances only)
+	metricsQuery := fmt.Sprintf(`
 		SELECT i.app_name, s.data
 		FROM (
 			SELECT DISTINCT ON (instance_id) instance_id, data
@@ -72,7 +97,8 @@ func (r *DashboardReader) GetStats(ctx context.Context) (ports.DashboardStats, e
 			ORDER BY instance_id, snapshot_at DESC
 		) s
 		JOIN instances i ON s.instance_id = i.instance_id
-	`
+		WHERE %s
+	`, visibleWindow("i"))
 	rows, err := r.db.QueryContext(ctx, metricsQuery)
 	if err != nil {
 		return stats, fmt.Errorf("get latest metrics: %w", err)
@@ -118,8 +144,9 @@ func (r *DashboardReader) GetStats(ctx context.Context) (ports.DashboardStats, e
 // appName filters by app name (empty = all apps).
 // search filters by instance_id, version, environment, or deployment_mode.
 func (r *DashboardReader) ListInstances(ctx context.Context, offset, limit int, appName, search string) ([]ports.InstanceSummary, error) {
-	// Build dynamic query with optional filters
-	query := `
+	// Build dynamic query with optional filters. Inactive/abandoned instances
+	// (last_seen >= InactiveAfter) are excluded from the dashboard.
+	query := fmt.Sprintf(`
 		SELECT
 			i.instance_id, i.app_name, i.app_version, i.environment, i.status, i.last_seen_at, i.deployment_mode,
 			COALESCE(s.data, '{}'::jsonb),
@@ -132,8 +159,8 @@ func (r *DashboardReader) ListInstances(ctx context.Context, offset, limit int, 
 			ORDER BY snapshot_at DESC
 			LIMIT 1
 		) s ON true
-		WHERE 1=1
-	`
+		WHERE %s
+	`, visibleWindow("i"))
 
 	args := []any{}
 	argIdx := 1
@@ -191,6 +218,7 @@ func (r *DashboardReader) ListInstances(ctx context.Context, offset, limit int, 
 
 		summary.ID = domain.InstanceID(instanceID)
 		summary.Status = domain.InstanceStatus(status)
+		summary.Health = domain.ComputeHealth(summary.LastSeenAt, time.Now().UTC())
 		_ = json.Unmarshal(rawMetrics, &summary.Metrics)
 
 		if appSlug.Valid {
@@ -268,15 +296,15 @@ func (r *DashboardReader) GetMetricsTimeSeries(ctx context.Context, appName stri
 	return result, nil
 }
 
-// GetActiveInstancesCount returns the count of active instances for an app.
+// GetActiveInstancesCount returns the count of active (non-inactive) instances for an app.
 func (r *DashboardReader) GetActiveInstancesCount(ctx context.Context, appSlug string) (int, error) {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT COUNT(*)
 		FROM instances i
 		JOIN applications a ON i.application_id = a.id
 		WHERE a.app_slug = $1
-		  AND i.last_seen_at > NOW() - INTERVAL '30 days'
-	`
+		  AND %s
+	`, visibleWindow("i"))
 
 	var count int
 	err := r.db.QueryRowContext(ctx, query, appSlug).Scan(&count)
@@ -289,16 +317,16 @@ func (r *DashboardReader) GetActiveInstancesCount(ctx context.Context, appSlug s
 
 // GetMostUsedVersion returns the most commonly used version for an app.
 func (r *DashboardReader) GetMostUsedVersion(ctx context.Context, appSlug string) (string, error) {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT i.app_version
 		FROM instances i
 		JOIN applications a ON i.application_id = a.id
 		WHERE a.app_slug = $1
-		  AND i.last_seen_at > NOW() - INTERVAL '30 days'
+		  AND %s
 		GROUP BY i.app_version
 		ORDER BY COUNT(*) DESC
 		LIMIT 1
-	`
+	`, visibleWindow("i"))
 
 	var version string
 	err := r.db.QueryRowContext(ctx, query, appSlug).Scan(&version)
@@ -314,7 +342,7 @@ func (r *DashboardReader) GetMostUsedVersion(ctx context.Context, appSlug string
 
 // GetAggregatedMetric sums a specific metric across all active instances of an app.
 func (r *DashboardReader) GetAggregatedMetric(ctx context.Context, appSlug, metricName string) (float64, error) {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT COALESCE(SUM((latest.data->>$2)::numeric), 0)
 		FROM (
 			SELECT DISTINCT ON (i.instance_id) i.instance_id, s.data
@@ -329,10 +357,10 @@ func (r *DashboardReader) GetAggregatedMetric(ctx context.Context, appSlug, metr
 				LIMIT 1
 			) s ON true
 			WHERE a.app_slug = $1
-			  AND i.last_seen_at > NOW() - INTERVAL '30 days'
+			  AND %s
 			  AND s.data IS NOT NULL
 		) latest
-	`
+	`, visibleWindow("i"))
 
 	var total float64
 	err := r.db.QueryRowContext(ctx, query, appSlug, metricName).Scan(&total)
@@ -345,7 +373,7 @@ func (r *DashboardReader) GetAggregatedMetric(ctx context.Context, appSlug, metr
 
 // GetCombinedStats returns both an aggregated metric and instance count.
 func (r *DashboardReader) GetCombinedStats(ctx context.Context, appSlug, metricName string) (float64, int, error) {
-	query := `
+	query := fmt.Sprintf(`
 		WITH latest_metrics AS (
 			SELECT DISTINCT ON (i.instance_id)
 				i.instance_id,
@@ -361,14 +389,14 @@ func (r *DashboardReader) GetCombinedStats(ctx context.Context, appSlug, metricN
 				LIMIT 1
 			) s ON true
 			WHERE a.app_slug = $1
-			  AND i.last_seen_at > NOW() - INTERVAL '30 days'
+			  AND %s
 			  AND s.data IS NOT NULL
 		)
 		SELECT
 			COALESCE(SUM(metric_value), 0) as total,
 			COUNT(*) as instances
 		FROM latest_metrics
-	`
+	`, visibleWindow("i"))
 
 	var metricValue float64
 	var instanceCount int

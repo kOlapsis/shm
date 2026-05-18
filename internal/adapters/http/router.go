@@ -43,7 +43,7 @@ func NewRouter(cfg RouterConfig) *http.ServeMux {
 	snapshotSvc := app.NewSnapshotService(snapshotRepo, instanceRepo)
 	dashboardSvc := app.NewDashboardService(dashboardReader)
 
-	scheduler := services.NewScheduler(applicationSvc, logger)
+	scheduler := services.NewScheduler(applicationSvc, instanceSvc, logger)
 	go scheduler.Start(context.Background())
 
 	handlers := NewHandlers(instanceSvc, snapshotSvc, applicationSvc, dashboardSvc, logger)

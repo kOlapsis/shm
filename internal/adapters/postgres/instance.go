@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/kolapsis/shm/internal/domain"
 )
@@ -158,4 +159,15 @@ func (r *InstanceRepository) Delete(ctx context.Context, id domain.InstanceID) e
 	}
 
 	return nil
+}
+
+// DeleteStale removes every instance whose last_seen_at is older than `olderThan`.
+// Snapshots cascade via FK ON DELETE CASCADE.
+func (r *InstanceRepository) DeleteStale(ctx context.Context, olderThan time.Time) (int64, error) {
+	result, err := r.db.ExecContext(ctx, `DELETE FROM instances WHERE last_seen_at < $1`, olderThan)
+	if err != nil {
+		return 0, fmt.Errorf("delete stale instances: %w", err)
+	}
+	rows, _ := result.RowsAffected()
+	return rows, nil
 }
