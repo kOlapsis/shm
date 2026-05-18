@@ -183,12 +183,22 @@
     <!-- Footer -->
     <div class="p-4 border-t border-gray-800">
         <div class="flex items-center justify-between text-xs text-gray-500">
-            <div class="flex items-center gap-2">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span x-text="$store.dashboard.stats.active_instances + ' active'"></span>
+            <div class="flex items-center gap-3" title="Health: ok / late / silent">
+                <div class="flex items-center gap-1.5">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span x-text="$store.dashboard.stats.active_instances"></span>
+                </div>
+                <div class="flex items-center gap-1.5" x-show="$store.dashboard.stats.late_instances > 0">
+                    <span class="inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    <span x-text="$store.dashboard.stats.late_instances"></span>
+                </div>
+                <div class="flex items-center gap-1.5" x-show="$store.dashboard.stats.silent_instances > 0">
+                    <span class="inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    <span x-text="$store.dashboard.stats.silent_instances"></span>
+                </div>
             </div>
             <button @click="refresh()" class="p-1 text-gray-500 hover:text-white hover:bg-gray-800 rounded transition-colors" :disabled="$store.dashboard.loading" aria-label="Refresh data">
                 <i class="ph-bold ph-arrows-clockwise text-sm" :class="{ 'animate-spin': $store.dashboard.loading }" aria-hidden="true"></i>
@@ -476,7 +486,7 @@
                                     >
                                         <td class="px-5 py-3">
                                             <div class="flex items-center gap-2">
-                                                <div class="w-1.5 h-1.5 rounded-full" :class="inst.status === 'active' ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-red-500'"></div>
+                                                <div class="w-1.5 h-1.5 rounded-full" :class="healthMeta(inst.health).dot" :title="healthMeta(inst.health).label"></div>
                                                 <span class="font-mono text-gray-300 text-xs" x-text="inst.instance_id.substring(0, 8)"></span>
                                             </div>
                                             <div class="pl-3.5 mt-1 flex items-center gap-2">
@@ -580,8 +590,8 @@
                                 <h3 id="drawer-title" class="text-base sm:text-xl font-bold text-white font-mono tracking-tight break-all" x-text="instance.instance_id"></h3>
                                 <span
                                     class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
-                                    :class="instance.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'"
-                                    x-text="instance.status"
+                                    :class="healthMeta(instance.health).badge"
+                                    x-text="healthMeta(instance.health).label"
                                 ></span>
                             </div>
                             <p class="text-sm text-gray-400" x-text="`${instance.app_name} v${instance.app_version}`"></p>

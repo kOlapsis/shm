@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { formatNumber, formatKey, formatResourceKey } from '../utils/formatters.js';
+import { formatNumber, formatKey, formatResourceKey, healthMeta } from '../utils/formatters.js';
 import { getResourceIcon } from '../utils/icons.js';
 
 /**
@@ -12,6 +12,7 @@ export default () => ({
     formatKey,
     formatResourceKey,
     getResourceIcon,
+    healthMeta,
 
     // Local state
     confirmDelete: false,

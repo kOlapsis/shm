@@ -8,7 +8,7 @@ export default {
     searchingInstances: false,
     deletingInstance: false,
 
-    stats: { total_instances: 0, active_instances: 0, per_app_counts: {} },
+    stats: { total_instances: 0, active_instances: 0, late_instances: 0, silent_instances: 0, per_app_counts: {} },
     applications: [],
     rawInstances: [],
     groupedInstances: {},
@@ -64,12 +64,17 @@ export default {
                 i => i.instance_id !== this.selectedInstance.instance_id
             );
 
-            // Update stats
+            // Update stats based on the deleted instance's health bucket
             if (this.stats.total_instances > 0) {
                 this.stats.total_instances--;
             }
-            if (this.selectedInstance.status === 'active' && this.stats.active_instances > 0) {
-                this.stats.active_instances--;
+            const bucketKey = {
+                ok: 'active_instances',
+                late: 'late_instances',
+                silent: 'silent_instances',
+            }[this.selectedInstance.health];
+            if (bucketKey && this.stats[bucketKey] > 0) {
+                this.stats[bucketKey]--;
             }
 
             // Update per app counts

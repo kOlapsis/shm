@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { formatNumber, formatKey, timeAgo, canvasId } from '../utils/formatters.js';
+import { formatNumber, formatKey, timeAgo, canvasId, healthMeta } from '../utils/formatters.js';
 import { getOSIcon, getIconForTag } from '../utils/icons.js';
 
 /**
@@ -14,6 +14,7 @@ export default () => ({
     canvasId,
     getOSIcon,
     getIconForTag,
+    healthMeta,
 
     /**
      * Get the dashboard store

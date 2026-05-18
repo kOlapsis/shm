@@ -89,3 +89,38 @@ export function canvasId(appName) {
     const short = hash(appName).slice(0, 6);
     return `chart-${s}-${short}`;
 }
+
+/**
+ * Visual presentation for an instance health value (see domain.InstanceHealth).
+ * Inactive/abandoned are filtered out server-side so they get a neutral fallback.
+ * @param {string} health
+ * @returns {{label: string, dot: string, badge: string}}
+ */
+export function healthMeta(health) {
+    switch (health) {
+        case 'ok':
+            return {
+                label: 'OK',
+                dot: 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]',
+                badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+            };
+        case 'late':
+            return {
+                label: 'Late',
+                dot: 'bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.5)]',
+                badge: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+            };
+        case 'silent':
+            return {
+                label: 'Silent',
+                dot: 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]',
+                badge: 'bg-red-500/10 text-red-500 border-red-500/20',
+            };
+        default:
+            return {
+                label: health || 'unknown',
+                dot: 'bg-gray-500',
+                badge: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+            };
+    }
+}
