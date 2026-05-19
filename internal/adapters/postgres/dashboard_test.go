@@ -127,18 +127,20 @@ func TestDashboardReader_GetMetricsTimeSeries(t *testing.T) {
 		defer db.Close()
 
 		reader := NewDashboardReader(db)
-		now := time.Now().UTC()
+		now := time.Now().UTC().Truncate(5 * time.Minute)
 		since := now.Add(-24 * time.Hour)
+		bucket := 5 * time.Minute
 
-		rows := sqlmock.NewRows([]string{"snapshot_at", "data"}).
-			AddRow(now.Add(-1*time.Hour), `{"cpu": 0.3}`).
-			AddRow(now, `{"cpu": 0.5}`)
+		// The bucketed query returns (bucket, metric_key, total).
+		rows := sqlmock.NewRows([]string{"bucket", "metric_key", "total"}).
+			AddRow(now.Add(-1*time.Hour), "cpu", 0.3).
+			AddRow(now, "cpu", 0.5)
 
-		mock.ExpectQuery("SELECT.+FROM snapshots").
-			WithArgs("myapp", since).
+		mock.ExpectQuery("FROM snapshots").
+			WithArgs("myapp", since, "300 seconds").
 			WillReturnRows(rows)
 
-		ts, err := reader.GetMetricsTimeSeries(ctx, "myapp", since)
+		ts, err := reader.GetMetricsTimeSeries(ctx, "myapp", since, bucket)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -153,6 +155,9 @@ func TestDashboardReader_GetMetricsTimeSeries(t *testing.T) {
 		}
 		if len(cpuData) != 2 {
 			t.Errorf("expected 2 data points, got %d", len(cpuData))
+		}
+		if cpuData[0] != 0.3 || cpuData[1] != 0.5 {
+			t.Errorf("expected [0.3, 0.5], got %v", cpuData)
 		}
 	})
 }

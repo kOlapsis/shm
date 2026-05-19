@@ -50,7 +50,7 @@ func (m *mockDashboardReader) ListInstances(ctx context.Context, offset, limit i
 	return m.instances[start:end], nil
 }
 
-func (m *mockDashboardReader) GetMetricsTimeSeries(ctx context.Context, appName string, since time.Time) (ports.MetricsTimeSeries, error) {
+func (m *mockDashboardReader) GetMetricsTimeSeries(ctx context.Context, appName string, since time.Time, bucket time.Duration) (ports.MetricsTimeSeries, error) {
 	if m.tsErr != nil {
 		return ports.MetricsTimeSeries{}, m.tsErr
 	}

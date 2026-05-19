@@ -127,7 +127,7 @@ func (m *mockDashboardReader) ListInstances(ctx context.Context, offset, limit i
 	return m.instances, nil
 }
 
-func (m *mockDashboardReader) GetMetricsTimeSeries(ctx context.Context, appName string, since time.Time) (ports.MetricsTimeSeries, error) {
+func (m *mockDashboardReader) GetMetricsTimeSeries(ctx context.Context, appName string, since time.Time, bucket time.Duration) (ports.MetricsTimeSeries, error) {
 	return ports.MetricsTimeSeries{
 		Timestamps: []time.Time{time.Now().UTC()},
 		Metrics:    map[string][]float64{"cpu": {0.5}},

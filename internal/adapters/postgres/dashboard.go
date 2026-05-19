@@ -235,65 +235,84 @@ func (r *DashboardReader) ListInstances(ctx context.Context, offset, limit int, 
 	return list, nil
 }
 
-// GetMetricsTimeSeries returns time-series metrics for an app.
-func (r *DashboardReader) GetMetricsTimeSeries(ctx context.Context, appName string, since time.Time) (ports.MetricsTimeSeries, error) {
+// GetMetricsTimeSeries returns time-series metrics for an app, aggregated
+// into fixed-width time buckets. Numeric values across instances are summed
+// per bucket. Non-numeric JSONB values are ignored.
+func (r *DashboardReader) GetMetricsTimeSeries(ctx context.Context, appName string, since time.Time, bucket time.Duration) (ports.MetricsTimeSeries, error) {
+	if bucket <= 0 {
+		bucket = 5 * time.Minute
+	}
+
+	// date_bin (PG14+) snaps each snapshot to its bucket start. We unpack the
+	// JSONB into (key, value) pairs, keep only numerics, and SUM per (bucket, key).
 	query := `
-		SELECT s.snapshot_at, s.data
-		FROM snapshots s
-		JOIN instances i ON s.instance_id = i.instance_id
-		WHERE i.app_name = $1
-		  AND s.snapshot_at > $2
-		ORDER BY s.snapshot_at ASC
+		SELECT bucket, metric_key, total::float8
+		FROM (
+			SELECT
+				date_bin($3::interval, s.snapshot_at, TIMESTAMPTZ '2001-01-01') AS bucket,
+				kv.key AS metric_key,
+				SUM((kv.value)::numeric) AS total
+			FROM snapshots s
+			JOIN instances i ON s.instance_id = i.instance_id
+			CROSS JOIN LATERAL jsonb_each_text(s.data) AS kv(key, value)
+			WHERE i.app_name = $1
+			  AND s.snapshot_at > $2
+			  AND kv.value ~ '^-?[0-9]+(\.[0-9]+)?$'
+			GROUP BY bucket, kv.key
+		) t
+		ORDER BY bucket ASC, metric_key ASC
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, appName, since)
+	rows, err := r.db.QueryContext(ctx, query, appName, since, intervalLiteral(bucket))
 	if err != nil {
 		return ports.MetricsTimeSeries{}, fmt.Errorf("get metrics time series: %w", err)
 	}
 	defer rows.Close()
 
-	// Aggregate metrics by timestamp
-	timestampMap := make(map[time.Time]map[string]float64)
+	// Collect unique bucket timestamps in order, plus per-metric values keyed by bucket.
 	var timestamps []time.Time
+	bucketIndex := make(map[time.Time]int)
+	perMetric := make(map[string]map[time.Time]float64)
 
 	for rows.Next() {
-		var snapshotAt time.Time
-		var rawMetrics []byte
-
-		if err := rows.Scan(&snapshotAt, &rawMetrics); err != nil {
+		var ts time.Time
+		var key string
+		var val float64
+		if err := rows.Scan(&ts, &key, &val); err != nil {
 			continue
 		}
-
-		var metrics map[string]any
-		if err := json.Unmarshal(rawMetrics, &metrics); err != nil {
-			continue
+		if _, seen := bucketIndex[ts]; !seen {
+			bucketIndex[ts] = len(timestamps)
+			timestamps = append(timestamps, ts)
 		}
-
-		if _, exists := timestampMap[snapshotAt]; !exists {
-			timestampMap[snapshotAt] = make(map[string]float64)
-			timestamps = append(timestamps, snapshotAt)
+		if perMetric[key] == nil {
+			perMetric[key] = make(map[time.Time]float64)
 		}
-
-		for key, val := range metrics {
-			if v, ok := val.(float64); ok {
-				timestampMap[snapshotAt][key] += v
-			}
-		}
+		perMetric[key][ts] = val
+	}
+	if err := rows.Err(); err != nil {
+		return ports.MetricsTimeSeries{}, fmt.Errorf("iterate metrics time series: %w", err)
 	}
 
-	// Build result
+	// Align each metric series to the bucket order; missing buckets stay 0.
 	result := ports.MetricsTimeSeries{
 		Timestamps: timestamps,
-		Metrics:    make(map[string][]float64),
+		Metrics:    make(map[string][]float64, len(perMetric)),
 	}
-
-	for _, ts := range timestamps {
-		for metricKey, value := range timestampMap[ts] {
-			result.Metrics[metricKey] = append(result.Metrics[metricKey], value)
+	for key, byBucket := range perMetric {
+		series := make([]float64, len(timestamps))
+		for ts, v := range byBucket {
+			series[bucketIndex[ts]] = v
 		}
+		result.Metrics[key] = series
 	}
 
 	return result, nil
+}
+
+// intervalLiteral formats a Go duration as a PostgreSQL interval literal in seconds.
+func intervalLiteral(d time.Duration) string {
+	return fmt.Sprintf("%d seconds", int64(d.Seconds()))
 }
 
 // GetActiveInstancesCount returns the count of active (non-inactive) instances for an app.

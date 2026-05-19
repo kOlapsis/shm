@@ -80,6 +80,25 @@ func (p Period) Duration() time.Duration {
 	}
 }
 
+// BucketSize returns the aggregation bucket for time-series queries.
+// Targets ~100–300 points per chart so labels stay readable.
+func (p Period) BucketSize() time.Duration {
+	switch p {
+	case Period7d:
+		return time.Hour // 168 points
+	case Period30d:
+		return 6 * time.Hour // 120 points
+	case Period3m:
+		return 24 * time.Hour // 90 points
+	case Period1y:
+		return 7 * 24 * time.Hour // 52 points
+	case PeriodAll:
+		return 7 * 24 * time.Hour
+	default:
+		return 5 * time.Minute // 24h → 288 points
+	}
+}
+
 // ParsePeriod parses a period string.
 func ParsePeriod(s string) Period {
 	switch s {
@@ -106,7 +125,7 @@ func (s *DashboardService) GetMetricsTimeSeries(ctx context.Context, appName str
 
 	since := time.Now().UTC().Add(-period.Duration())
 
-	data, err := s.reader.GetMetricsTimeSeries(ctx, appName, since)
+	data, err := s.reader.GetMetricsTimeSeries(ctx, appName, since, period.BucketSize())
 	if err != nil {
 		return ports.MetricsTimeSeries{}, fmt.Errorf("get metrics time series: %w", err)
 	}

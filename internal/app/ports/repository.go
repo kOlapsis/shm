@@ -124,8 +124,9 @@ type DashboardReader interface {
 	// search filters by instance_id, version, environment, or deployment_mode.
 	ListInstances(ctx context.Context, offset, limit int, appName, search string) ([]InstanceSummary, error)
 
-	// GetMetricsTimeSeries returns time-series metrics for an app.
-	GetMetricsTimeSeries(ctx context.Context, appName string, since time.Time) (MetricsTimeSeries, error)
+	// GetMetricsTimeSeries returns time-series metrics for an app, aggregated by
+	// bucket. Each bucket sums all numeric metric values across instances.
+	GetMetricsTimeSeries(ctx context.Context, appName string, since time.Time, bucket time.Duration) (MetricsTimeSeries, error)
 
 	// Badge-specific queries
 
