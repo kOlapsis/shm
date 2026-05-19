@@ -158,22 +158,25 @@ export default {
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
 
+            // Map (timestamp, value) into Chart.js {x, y} points so the time scale
+            // can drive tick density itself — no per-point labels in the DOM.
+            const points = timestamps.map((ts, i) => ({ x: new Date(ts).getTime(), y: values[i] }));
+            const period = this.getPeriod(appName);
+            const timeUnit = this.timeUnitFor(period);
+
             this.chartInstances[appName] = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: timestamps.map(ts => new Date(ts).toLocaleString('en-US', {
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    })),
                     datasets: [{
                         label: formatKey(metricKey),
-                        data: values,
+                        data: points,
                         borderColor: '#6366f1',
                         backgroundColor: 'rgba(99, 102, 241, 0.1)',
                         borderWidth: 2,
                         fill: true,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
                         pointBackgroundColor: '#6366f1',
                         pointBorderColor: '#1a202c',
                         pointBorderWidth: 2
@@ -200,10 +203,30 @@ export default {
                     },
                     scales: {
                         x: {
+                            type: 'time',
+                            time: {
+                                unit: timeUnit,
+                                tooltipFormat: 'PPpp',
+                                displayFormats: {
+                                    minute: 'HH:mm',
+                                    hour: 'MMM d HH:mm',
+                                    day: 'MMM d',
+                                    week: 'MMM d',
+                                    month: 'MMM yyyy'
+                                }
+                            },
                             grid: { color: '#1f2937', drawBorder: false },
-                            ticks: { color: '#6b7280', maxRotation: 45, minRotation: 45, font: { size: 10 } }
+                            ticks: {
+                                color: '#6b7280',
+                                font: { size: 10 },
+                                maxRotation: 0,
+                                autoSkip: true,
+                                autoSkipPadding: 24,
+                                maxTicksLimit: 8
+                            }
                         },
                         y: {
+                            beginAtZero: true,
                             grid: { color: '#1f2937', drawBorder: false },
                             ticks: { color: '#6b7280', font: { size: 10 }, callback: v => formatNumber(v) }
                         }
@@ -217,6 +240,20 @@ export default {
         } catch (err) {
             console.error('Chart render failed:', err);
             this.destroyChart(appName);
+        }
+    },
+
+    /**
+     * Pick the Chart.js time unit that matches the server bucket size for a period.
+     */
+    timeUnitFor(period) {
+        switch (period) {
+            case '7d':  return 'hour';
+            case '30d': return 'day';
+            case '3m':  return 'day';
+            case '1y':  return 'week';
+            case 'all': return 'week';
+            default:    return 'hour'; // 24h
         }
     },
 
