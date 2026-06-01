@@ -185,8 +185,8 @@ services:
       PORT: "8080"
     labels:
       - "traefik.enable=true"
-      # Public API routes (telemetry collection + healthcheck) - no auth
-      - "traefik.http.routers.shm-api.rule=Host(`shm.example.com`) && PathPrefix(`/api/v1/`) && !PathPrefix(`/api/v1/admin/`)"
+      # Public SDK endpoints (telemetry collection) - no auth
+      - "traefik.http.routers.shm-api.rule=Host(`shm.example.com`) && PathPrefix(`/v1/`)"
       - "traefik.http.routers.shm-api.entrypoints=websecure"
       - "traefik.http.routers.shm-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.shm-api.service=shm"
@@ -271,8 +271,8 @@ services:
       PORT: "8080"
     labels:
       - "traefik.enable=true"
-      # Public API routes (telemetry collection + healthcheck) - no auth
-      - "traefik.http.routers.shm-api.rule=Host(`shm.example.com`) && PathPrefix(`/api/v1/`) && !PathPrefix(`/api/v1/admin/`)"
+      # Public SDK endpoints (telemetry collection) - no auth
+      - "traefik.http.routers.shm-api.rule=Host(`shm.example.com`) && PathPrefix(`/v1/`)"
       - "traefik.http.routers.shm-api.entrypoints=websecure"
       - "traefik.http.routers.shm-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.shm-api.service=shm"
@@ -326,20 +326,8 @@ server {
     ssl_certificate /etc/letsencrypt/live/shm.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/shm.example.com/privkey.pem;
 
-    # Public API (telemetry + healthcheck) - no auth
-    location /api/v1/ {
-        # Exclude admin endpoints
-        location /api/v1/admin/ {
-            auth_basic "SHM Admin";
-            auth_basic_user_file /etc/nginx/.htpasswd;
-
-            proxy_pass http://shm;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
+    # Public SDK endpoints (telemetry collection) - no auth
+    location /v1/ {
         proxy_pass http://shm;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -371,10 +359,9 @@ htpasswd -c /etc/nginx/.htpasswd admin
 
 ```caddyfile
 shm.example.com {
-    # Public API (telemetry + healthcheck) - no auth
+    # Public SDK endpoints (telemetry collection) - no auth
     @public_api {
-        path /api/v1/*
-        not path /api/v1/admin/*
+        path /v1/*
     }
     handle @public_api {
         reverse_proxy localhost:8080
