@@ -231,9 +231,26 @@ func TestInstance_Activate(t *testing.T) {
 		t.Errorf("expected status %s, got %s", StatusActive, inst.Status)
 	}
 
-	// Cannot activate again
+	// Activating again is idempotent (SDK replays activation on restart)
+	// and refreshes the heartbeat
+	inst.LastSeenAt = inst.LastSeenAt.Add(-time.Hour)
+	before := inst.LastSeenAt
+	if err := inst.Activate(); err != nil {
+		t.Errorf("expected re-activation to succeed, got error: %v", err)
+	}
+	if inst.Status != StatusActive {
+		t.Errorf("expected status %s, got %s", StatusActive, inst.Status)
+	}
+	if !inst.LastSeenAt.After(before) {
+		t.Error("expected re-activation to refresh LastSeenAt")
+	}
+
+	// Cannot activate a revoked instance
+	_ = inst.Revoke()
 	if err := inst.Activate(); err == nil {
-		t.Error("expected error when activating already active instance")
+		t.Error("expected error when activating revoked instance")
+	} else if !errors.Is(err, ErrInvalidStatusTransition) {
+		t.Errorf("expected ErrInvalidStatusTransition, got %v", err)
 	}
 }
 

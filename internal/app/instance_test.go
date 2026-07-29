@@ -225,13 +225,31 @@ func TestInstanceService_Activate(t *testing.T) {
 		}
 	})
 
-	t.Run("fails for already active instance", func(t *testing.T) {
+	t.Run("succeeds for already active instance", func(t *testing.T) {
 		repo := newMockInstanceRepo()
 		svc := NewInstanceService(repo, newTestApplicationService())
 
-		// Create active instance
+		// Create active instance (SDK replays activation on restart)
 		inst, _ := domain.NewInstance(validUUID, validKey, "myapp", "1.0", "docker", "prod", "linux/amd64")
 		_ = inst.Activate()
+		repo.instances[validUUID] = inst
+
+		err := svc.Activate(ctx, validUUID)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if repo.instances[validUUID].Status != domain.StatusActive {
+			t.Error("instance should remain active")
+		}
+	})
+
+	t.Run("fails for revoked instance", func(t *testing.T) {
+		repo := newMockInstanceRepo()
+		svc := NewInstanceService(repo, newTestApplicationService())
+
+		inst, _ := domain.NewInstance(validUUID, validKey, "myapp", "1.0", "docker", "prod", "linux/amd64")
+		_ = inst.Revoke()
 		repo.instances[validUUID] = inst
 
 		err := svc.Activate(ctx, validUUID)

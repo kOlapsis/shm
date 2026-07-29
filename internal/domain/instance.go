@@ -178,8 +178,14 @@ func NewInstance(
 	}, nil
 }
 
-// Activate transitions the instance to active status.
+// Activate transitions the instance to active status. It is idempotent:
+// SDK clients replay activation on every process restart, so an already
+// active instance is treated as a heartbeat, not an error.
 func (i *Instance) Activate() error {
+	if i.Status == StatusActive {
+		i.LastSeenAt = time.Now().UTC()
+		return nil
+	}
 	if !i.Status.CanTransitionTo(StatusActive) {
 		return fmt.Errorf("%w: cannot activate from status %s", ErrInvalidStatusTransition, i.Status)
 	}
