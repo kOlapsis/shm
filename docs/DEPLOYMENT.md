@@ -493,7 +493,11 @@ docker compose pull
 docker compose up -d
 ```
 
-Database migrations are applied automatically on startup.
+The app does not run migrations. The PostgreSQL image executes the SQL files in `migrations/` only when the database volume is initialized for the first time. When a release adds a migration file, download it and apply it by hand:
+
+```bash
+docker exec -i shm-db psql -U shm -v ON_ERROR_STOP=1 metrics < migrations/003_example.sql
+```
 
 ### Upgrading PostgreSQL 15 to 18
 
