@@ -155,7 +155,7 @@ name: shm
 
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: shm-db
     restart: unless-stopped
     environment:
@@ -163,7 +163,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-change-me-in-production}
       POSTGRES_DB: metrics
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U shm -d metrics"]

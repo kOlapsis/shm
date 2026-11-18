@@ -14,7 +14,7 @@ services:
       - "8080:8080"
 
   db:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: shm-db
     environment:
       POSTGRES_USER: user
@@ -25,7 +25,7 @@ services:
     labels:
       - docker-volume-backup.stop-during-backup=true
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d metrics"]

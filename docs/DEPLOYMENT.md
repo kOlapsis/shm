@@ -23,7 +23,7 @@ name: shm
 
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: shm-db
     restart: unless-stopped
     environment:
@@ -31,7 +31,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-change-me-in-production}
       POSTGRES_DB: metrics
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U shm -d metrics"]
@@ -158,7 +158,7 @@ services:
       - "traefik.http.routers.authelia.tls.certresolver=letsencrypt"
 
   db:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: shm-db
     restart: unless-stopped
     environment:
@@ -166,7 +166,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: metrics
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U shm -d metrics"]
       interval: 10s
@@ -244,7 +244,7 @@ services:
       - letsencrypt:/letsencrypt
 
   db:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: shm-db
     restart: unless-stopped
     environment:
@@ -252,7 +252,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: metrics
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U shm -d metrics"]
       interval: 10s
@@ -494,6 +494,27 @@ docker compose up -d
 ```
 
 Database migrations are applied automatically on startup.
+
+### Upgrading PostgreSQL 15 to 18
+
+A major PostgreSQL version cannot read the data files of the previous one, so the data has to be dumped and restored. The `postgres:18` image also stores its data in `/var/lib/postgresql/18/docker`: the volume is now mounted on `/var/lib/postgresql` instead of `/var/lib/postgresql/data`.
+
+```bash
+# 1. Dump the database while the PostgreSQL 15 container is still running
+docker exec shm-db pg_dump -U shm --clean --if-exists metrics > shm-pg15.sql
+
+# 2. Stop the stack and delete the old volume (check the dump first!)
+docker compose down
+docker volume rm shm_postgres_data
+
+# 3. In compose.yml, set the db image to postgres:18-alpine
+#    and mount the volume on /var/lib/postgresql, then start the database
+docker compose up -d db
+
+# 4. Restore the dump and start the rest of the stack
+docker exec -i shm-db psql -U shm -v ON_ERROR_STOP=1 metrics < shm-pg15.sql
+docker compose up -d
+```
 
 ---
 
